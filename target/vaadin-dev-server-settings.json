@@ -1,0 +1,17 @@
+{
+  "frontendFolder": "/Users/othman/Downloads/guess-game/./frontend",
+  "themeFolder": "themes",
+  "themeResourceFolder": "/Users/othman/Downloads/guess-game/./frontend/generated/jar-resources",
+  "staticOutput": "/Users/othman/Downloads/guess-game/target/classes/META-INF/VAADIN/webapp/VAADIN/static",
+  "generatedFolder": "generated",
+  "statsOutput": "/Users/othman/Downloads/guess-game/target/classes/META-INF/VAADIN/config",
+  "frontendBundleOutput": "/Users/othman/Downloads/guess-game/target/classes/META-INF/VAADIN/webapp",
+  "devBundleOutput": "/Users/othman/Downloads/guess-game/target/dev-bundle/webapp",
+  "devBundleStatsOutput": "/Users/othman/Downloads/guess-game/target/dev-bundle/config",
+  "jarResourcesFolder": "/Users/othman/Downloads/guess-game/./frontend/generated/jar-resources",
+  "themeName": "guessgame",
+  "clientServiceWorkerSource": "/Users/othman/Downloads/guess-game/target/sw.ts",
+  "pwaEnabled": false,
+  "offlineEnabled": false,
+  "offlinePath": "'offline.html'"
+}

@@ -1,0 +1,253 @@
+package game.code;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Game {
+    private String name;
+    private List<Player> players;
+    private boolean locked;
+    private int roundNumber;
+    private Map<Player, Integer> points; // Store points for each player
+
+    // Constructor
+    public Game(String name) {
+        this.name = name;
+        players = new ArrayList<>();
+        locked = false;
+        roundNumber = 0;
+        points = new HashMap<>();
+    }
+
+    // Method to add a player to the game
+    public void addPlayer(Player player) {
+        if (players.size() < 6) { // Check if maximum players limit is reached
+            players.add(player);
+            points.put(player, 5); // Initialize points for the player
+            notifyPlayers(); // Notify players about new player
+        } else {
+            System.out.println("Maximum players limit reached. Cannot add more players.");
+        }
+    }
+
+    // Method to remove a player from the game
+    public void removePlayer(Player player) {
+        players.remove(player);
+        points.remove(player);
+        notifyPlayers(); // Notify players about player removal
+    }
+
+    // Method to lock the game
+    public void lockGame() {
+        locked = true;
+        notifyPlayers(); // Notify players about game being locked
+    }
+
+    // Method to set and get the game name
+    public String getName() {
+        return name;
+    }
+
+    // Method to set the game name
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // Method to start the game
+    public void startGame() {
+        // Check if minimum players requirement is met, then lock the game and start playing rounds
+        if (players.size() >= 2) {
+            locked = true;
+            playRounds();
+        } else {
+            System.out.println("2 or more players required to start the game.");
+        }
+    }
+
+    // Method to play rounds until game ends
+    public void playRounds() {
+        // keep playing rounds until only one player remains
+        while (players.size() > 1) {
+            roundNumber++;
+            List<Integer> selectedNumbers = new ArrayList<>();
+            for (Player player : players) {
+                int selectedNumber = player.selectNumber();
+                selectedNumbers.add(selectedNumber);
+            }
+            double average = calculateAverage(selectedNumbers);
+            // Determine round winners, deduct points from losers, and eliminate players with no points
+            List<Player> winners = determineRoundWinners(selectedNumbers, average);
+            deductPointsFromLosers(winners);
+            eliminatePlayersWithNoPoints();
+            notifyRoundOutcome(selectedNumbers, winners);
+
+            // Check for game end condition
+            if (players.size() == 1) {
+                endGame(); // End the game if only one player remains
+                return;
+            }
+        }
+    }
+
+    public void endGame() {
+        System.out.println("Game " + name + " has ended.");
+        System.out.println("Winner: " + players.get(0).getName());
+    }
+
+    // Method to calculate the average of selected numbers
+    public double calculateAverage(List<Integer> numbers) {
+        int sum = 0;
+        for (int num : numbers) {
+            sum += num;
+        }
+        return (double) sum / numbers.size();
+    }
+
+    // Method to determine round winners
+    public List<Player> determineRoundWinners(List<Integer> selectedNumbers, double average) {
+        List<Player> winners = new ArrayList<>();
+        double twoThirdsAverage = (2.0 / 3.0) * average;
+        double minDifference = Double.MAX_VALUE;
+        for (int i = 0; i < selectedNumbers.size(); i++) {
+            double difference = Math.abs(selectedNumbers.get(i) - twoThirdsAverage);
+            if (difference <= minDifference) {
+                if (difference < minDifference) {
+                    winners.clear();
+                    minDifference = difference;
+                }
+                winners.add(players.get(i));
+            }
+        }
+        return winners;
+    }
+
+    // Method to deduct points from losing players
+    public void deductPointsFromLosers(List<Player> winners) {
+        for (Player player : players) {
+            if (!winners.contains(player)) {
+                int playerPoints = points.get(player);
+                if (playerPoints > 0) {
+                    points.put(player, playerPoints - 1);
+                }
+            }
+        }
+    }
+
+    // Method to eliminate players with no points left
+    public void eliminatePlayersWithNoPoints() {
+        List<Player> playersToRemove = new ArrayList<>();
+        for (Player player : players) {
+            if (points.get(player) <= 0) {
+                playersToRemove.add(player);
+            }
+        }
+        for (Player player : playersToRemove) {
+            removePlayer(player);
+        }
+    }
+
+    // Method to notify players about round outcome
+    public void notifyRoundOutcome(List<Integer> selectedNumbers, List<Player> winners) {
+        System.out.println("Round " + roundNumber + " Outcome:");
+        System.out.println("Selected Numbers: " + selectedNumbers);
+        for (Player player : players) {
+            String outcome;
+            if (winners.contains(player)) {
+                outcome = "Winner";
+            } else {
+                outcome = "Loser";
+            }
+            System.out.println(
+                    "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + points.get(player));
+        }
+        System.out.println();
+    }
+
+    // Method to notify players about game status
+    public void notifyPlayers() {
+        // Get the list of players in the game
+        String playersList = getGamePlayers();
+
+        System.out.println("Notify: " + playersList);
+    }
+
+    // Method to handle a player confirming readiness to start the game
+    public void playerReady(Player player) {
+        if (players.contains(player)) {
+            player.setReady(true); // Assuming Player class has a setReady method
+            boolean allPlayersReady = true;
+            for (Player p : players) {
+                if (!p.isReady()) {
+                    allPlayersReady = false;
+                    break;
+                }
+            }
+            if (allPlayersReady) {
+                startGame(); // Start the game if all players are ready
+            }
+        }
+    }
+
+    // Method to handle a player selecting a number for the round
+    public void playerSelectNumber(Player player, int number) {
+        if (players.contains(player)) {
+            // Assuming Player class has a setNumberSelection method
+            player.setNumberSelection(number);
+        }
+    }
+
+    // Method to get the current round number
+    public int getRoundNumber() {
+        return roundNumber;
+    }
+
+    // Method to get the list of players in the game
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    // Method to get the points for a player
+    public void makeGuess(Game game, Player player, int guess) {
+        if (game.hasPlayerGuessed(player)) {
+            System.out.println("Player has already guessed for this round.");
+        } else {
+            player.setNumberSelection(guess);
+            System.out.println("Player " + player.getName() + " has guessed " + guess);
+            if (game.allPlayersReady()) {
+                game.lockGame();
+            }
+        }
+    }
+
+    // Method to check if all players are ready
+    public boolean allPlayersReady() {
+        for (Player player : players) {
+            if (!player.isReady()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Method to check if the game is locked
+    public boolean isLocked() {
+        return locked;
+    }
+
+    // Method to check if a player has guessed for the round
+    public boolean hasPlayerGuessed(Player player) {
+        return player.getNumberSelection() != -1;
+    }
+
+    // Method to get the list of players in the game
+    public String getGamePlayers() {
+        StringBuilder playersList = new StringBuilder();
+        for (Player player : players) {
+            playersList.append(player.getName()).append(", ");
+        }
+        return playersList.toString();
+    }
+
+}
