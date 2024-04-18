@@ -2,55 +2,66 @@ package game.views.home;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import game.code.Player;
+import game.views.LeaderboardView;
 import game.views.MainLayout;
 
 @PageTitle("Home")
 @Route(value = "home", layout = MainLayout.class)
+@RouteAlias(value = "", layout = MainLayout.class)
 public class HomeView extends HorizontalLayout {
 
+
     public HomeView(){
-        // add class to the main layout
+        // MAIN LAYOUT
         addClassName("home-view");
+
+        // hero div to display title and start game button
+        Div hero = new Div();
+        hero.addClassName("hero");
+
         H1 title = new H1("Welcome to the Guess 2/3 Game!");
         Button startGame = new Button("Start Game");
+        startGame.addClassName("start-game-btn");
         startGame.setThemeName("primary");
 
         startGame.addClickListener(e -> {
             Notification.show("Game started!");
+            // Go to the join game view
+            getUI().ifPresent(ui -> ui.navigate("join"));
+
 
         });
 
-        // leaderboard div to display players
-        Div leaderboard = new Div();
-        H2 leaderboardTitle = new H2("Leaderboard");
-        Grid<Player> playerGrid = new Grid<>(Player.class, true);
-        playerGrid.addClassName("player-grid");
-        playerGrid.setColumns( "name", "points", "ticket");
+        hero.add(title, startGame);
 
 
-        // add players to the grid
-        Player player1 = new Player("Player 1", "1234");
-        Player player2 = new Player("Player 2", "5678");
-        Player player3 = new Player("Player 3", "9101");
-        playerGrid.setItems(player1, player2, player3);
+        Div leaderboardContainer = new Div();
+        leaderboardContainer.addClassName("leaderboard-container");
 
-        playerGrid.setPageSize(3);
+        H4 leaderboardTitle = new H4("Leaderboard");
+        leaderboardTitle.addClassName("leaderboard-title");
 
-        leaderboard.add(leaderboardTitle, playerGrid);
+        // Create a Grid with Player objects
+        LeaderboardView leaderboardView = new LeaderboardView();
+        leaderboardView.addClassName("leaderboard-view");
+        leaderboardContainer.add(leaderboardTitle, leaderboardView);
 
-        add(title, startGame, leaderboard);
+
+        add(hero, leaderboardContainer);
 
 
     }
+
+
+
 
 
 }

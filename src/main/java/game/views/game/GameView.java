@@ -9,8 +9,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import game.views.MainLayout;
 
-@PageTitle("Game")
-@Route(value = "game", layout = MainLayout.class)
+@PageTitle("Games")
+@Route(value = "games", layout = MainLayout.class)
 public class GameView extends VerticalLayout {
 
     public GameView() {

@@ -53,7 +53,7 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
         nav.addItem(new SideNavItem("Home", HomeView.class, LineAwesomeIcon.HOUSE_DAMAGE_SOLID.create()));
         nav.addItem(new SideNavItem("Join", JoinView.class, LineAwesomeIcon.DOOR_OPEN_SOLID.create()));
-        nav.addItem(new SideNavItem("Game", GameView.class, LineAwesomeIcon.GAMEPAD_SOLID.create()));
+        nav.addItem(new SideNavItem("Games", GameView.class, LineAwesomeIcon.GAMEPAD_SOLID.create()));
 
         return nav;
     }

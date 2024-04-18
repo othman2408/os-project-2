@@ -12,7 +12,6 @@ import game.views.MainLayout;
 
 @PageTitle("Join")
 @Route(value = "join", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
 public class JoinView extends HorizontalLayout {
 
     private TextField name;
