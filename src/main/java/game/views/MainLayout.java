@@ -11,7 +11,7 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import game.views.game.GameView;
+import game.views.games.GamesView;
 import game.views.home.HomeView;
 import game.views.join.JoinView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -53,7 +53,7 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
         nav.addItem(new SideNavItem("Home", HomeView.class, LineAwesomeIcon.HOUSE_DAMAGE_SOLID.create()));
         nav.addItem(new SideNavItem("Join Game", JoinView.class, LineAwesomeIcon.DOOR_OPEN_SOLID.create()));
-        nav.addItem(new SideNavItem("Games", GameView.class, LineAwesomeIcon.GAMEPAD_SOLID.create()));
+        nav.addItem(new SideNavItem("Games", GamesView.class, LineAwesomeIcon.GAMEPAD_SOLID.create()));
 
         return nav;
     }
