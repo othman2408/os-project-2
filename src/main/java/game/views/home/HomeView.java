@@ -38,7 +38,8 @@ public class HomeView extends HorizontalLayout {
 
         Component startGameButton = startGame;
         startGameButton.getElement().addEventListener("click", e -> {
-            Notification.show("Game started!");
+            // Navigate to the game view
+            getUI().ifPresent(ui -> ui.navigate("join"));
         });
 
 
