@@ -29,7 +29,7 @@ public class JoinView extends HorizontalLayout {
             joinContainer.addClassName("join-container");
 
             // Header Icon for the join container
-            Image headerIcon = new Image("https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Neutral%20Face.png", "Join Icon");
+            Image headerIcon = new Image("https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Face%20with%20Peeking%20Eye.png", "Join Icon");
             headerIcon.addClassName("header-icon");
             joinContainer.add(headerIcon);
 
