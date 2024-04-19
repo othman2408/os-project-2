@@ -1,5 +1,7 @@
 package game.views.home;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.*;
@@ -12,6 +14,8 @@ import com.vaadin.flow.router.RouteAlias;
 import game.code.Player;
 import game.views.LeaderboardView;
 import game.views.MainLayout;
+
+import javax.lang.model.element.Element;
 
 @PageTitle("Home")
 @Route(value = "home", layout = MainLayout.class)
@@ -27,25 +31,25 @@ public class HomeView extends HorizontalLayout {
         Div hero = new Div();
         hero.addClassName("hero");
 
-        H1 title = new H1("Welcome to the Guess 2/3 Game!");
-        Button startGame = new Button("Start Game");
+        H1 title = new H1("Welcome to, 2/3 Guess Game!");
+        title.addClassName("home-title");
+        Html startGame = new Html("<button class=\"ui-btn\"> <span> Let's Start </span> </button>");
         startGame.addClassName("start-game-btn");
-        startGame.setThemeName("primary");
 
-        startGame.addClickListener(e -> {
+        Component startGameButton = startGame;
+        startGameButton.getElement().addEventListener("click", e -> {
             Notification.show("Game started!");
-            // Go to the join game view
-            getUI().ifPresent(ui -> ui.navigate("join"));
-
-
         });
 
+
+        // Add title and start game button to hero div
         hero.add(title, startGame);
 
-
+        // leaderboard div to display leaderboard
         Div leaderboardContainer = new Div();
         leaderboardContainer.addClassName("leaderboard-container");
 
+        // Add a header to the leaderboard container
         H4 leaderboardTitle = new H4("Leaderboard");
         leaderboardTitle.addClassName("leaderboard-title");
 
@@ -55,9 +59,8 @@ public class HomeView extends HorizontalLayout {
         leaderboardContainer.add(leaderboardTitle, leaderboardView);
 
 
+        // Add hero and leaderboard to main layout
         add(hero, leaderboardContainer);
-
-
     }
 
 

@@ -2,6 +2,7 @@ package game.views.games;
 
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
@@ -15,15 +16,32 @@ import com.vaadin.flow.component.button.Button;
 public class GamesView extends VerticalLayout {
 
     public GamesView() {
-        // Here a list of games will be shown as a grid of cards
+        // Center the content
+        setAlignItems(Alignment.CENTER);
 
+
+        // Create a container for the games and add a header
         Div gamesContainer = new Div();
         gamesContainer.addClassName("games-container");
 
+        // Add a header to the games container
+        H1 gamesHeader = new H1("Games List");
+        gamesHeader.addClassName("games-header");
+        gamesContainer.add(gamesHeader);
+
         // Create a game card for each game
-        Game game1 = new Game("Game 1");
+        Div gameCardsContainer = new Div();
+        gameCardsContainer.addClassName("game-cards-container");
+        gamesContainer.add(gameCardsContainer);
+
+
         Div gameCard1 = createGameCard();
-        gamesContainer.add(gameCard1);
+        Div gameCard2 = createGameCard();
+        Div gameCard3 = createGameCard();
+        Div gameCard4 = createGameCard();
+        Div gameCard5 = createGameCard();
+
+        gameCardsContainer.add(gameCard1, gameCard2, gameCard3, gameCard4, gameCard5);
 
         add(gamesContainer);
 
@@ -38,9 +56,8 @@ public class GamesView extends VerticalLayout {
         H3 gameTitle = new H3("Game Name");
         gameCard.add(gameTitle);
 
-        Button joinButton = new Button("Join Game");
+        Html joinButton = new Html("<button class=\"button\">Join</button>");
         gameCard.add(joinButton);
-
 
         // // Set the game name as the card title
         // Html gameTitle = new Html("<h3>" + "Game Name" + "</h3>");  
