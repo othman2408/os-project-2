@@ -1,3 +1,5 @@
+package game.code;
+
 import java.io.PrintWriter;
 import java.net.Socket;
 
