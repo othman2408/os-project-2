@@ -1,13 +1,14 @@
-package game.code;
-
-import game.code.Game;
-
+import java.io.Serializable;
+import java.net.Socket;
 import java.util.Scanner;
 
-public class Player {
+public class Player implements Serializable {
     private String name;
+    private Socket playerSocket;
     private String ticket;
     private int points;
+    private int numOfwins;
+    private int numOflosses;
     private boolean ready;
     private Game currentGame;
     private int numberSelection;
@@ -18,7 +19,15 @@ public class Player {
         this.points = 5; // start with 5 points for each player
         this.ready = false;
     }
+    // Method to get player's socket
+    public Socket getPlayerSocket() {
+        return playerSocket;
+    }
 
+    // Method to set player's socket
+    public void setPlayerSocket(Socket playerSocket) {
+        this.playerSocket = playerSocket;
+    }
     // Method to get player's name
     public String getName() {
         return name;
@@ -57,8 +66,9 @@ public class Player {
     // Method for player to select a number for the round
     public int selectNumber() {
         Scanner scanner = new Scanner(System.in);
+        int number;
         System.out.println("Select a number between 1 and 100:");
-        int number = scanner.nextInt();
+        number = scanner.nextInt();
         while (number < 1 || number > 100) {
             System.out.println("Invalid number. Please select a number between 1 and 100:");
             number = scanner.nextInt();
@@ -80,5 +90,24 @@ public class Player {
     public String getTicket() {
         return ticket;
     }
+     public String toString() {
+        return "Player info: " + name + " " + ticket;
+    }
 
+    public int getNumOfWins() {
+        return numOfwins;
+    }
+
+    public void setNumOfWins(int numOfwins) {
+        this.numOfwins = numOfwins;
+    }
+
+    public int getNumOfLosses() {
+        return numOflosses;
+    }
+
+    public void setNumOfLosses(int numOflosses) {
+        this.numOflosses = numOflosses;
+    }
+    
 }

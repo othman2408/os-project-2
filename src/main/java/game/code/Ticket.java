@@ -1,38 +1,50 @@
-package game.code;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Ticket {
 
-    private static int idCounter = 0;
-    private final int id;
-    private final String nickname;
+    private static String ticket;
 
-    public Ticket(String nickname) {
-        this.id = ++idCounter;
-        this.nickname = nickname;
+    public Ticket() {
+        generateTicket(sequence());
     }
 
-    public int getId() {
-        return id;
+    public void setTicket(String newTicket) {
+        ticket = newTicket;
     }
 
-    public String getNickname() {
-        return nickname;
+    public String sequence() {
+        return "0";
     }
 
-    // Method for ticket generation
+    public static String generateTicket(String sequence) {
+        byte[] hash = String.format("%32s", sequence).getBytes();
+        try {
+            for (int i = 0; i < Math.random() * 64 + 1; ++i) {
+                hash = MessageDigest.getInstance("SHA-256").digest(hash);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return ticket = formatHexWithDelimiter(hash, ":").substring(78);
+    }
+
+    private static String formatHexWithDelimiter(byte[] array, String delimiter) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : array) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex).append(delimiter);
+        }
+        // Removing the last delimiter
+        hexString.deleteCharAt(hexString.length() - 1);
+        return hexString.toString();
+    }
+
     @Override
     public String toString() {
-        return "Ticket{" +
-                "id=" + id +
-                ", nickname='" + nickname + '\'' +
-                '}';
+        return ticket;
     }
-
-    public static void main(String[] args) {
-        Ticket ticket1 = new Ticket("Alice");
-        Ticket ticket2 = new Ticket("Bob");
-        System.out.println(ticket1);
-        System.out.println(ticket2);
-    }
-    
 }

@@ -1,26 +1,74 @@
-package game.code;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Game {
+public class Game implements Serializable {
     private String name;
     private List<Player> players;
     private boolean locked;
     private int roundNumber;
     private Map<Player, Integer> points; // Store points for each player
+    private List<Integer> selectedNumbers;
 
     // Constructor
     public Game(String name) {
         this.name = name;
-        players = new ArrayList<>();
-        locked = false;
-        roundNumber = 0;
-        points = new HashMap<>();
+        this.players = new ArrayList<>();
+        this.selectedNumbers = new ArrayList<>();
+        this.locked = false;
+        this.roundNumber = 1;
+        this.points = new HashMap<>();
     }
 
+    // Method to get the current round number
+    public int getRoundNumber() {
+        return roundNumber;
+    }
+
+    // Method to get the game name
+    public String getName() {
+        return name;
+    }
+
+    // Method to set the game name
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // Method to get the selected numbers for the round
+    public List<Integer> getSelectedNumbers() {
+        return selectedNumbers;
+    }
+
+    // Method to set the selected numbers for the round
+    public void setSelectedNumbers(List<Integer> selectedNumbers) {
+        this.selectedNumbers = selectedNumbers;
+    }
+    
+    // Method to set the current round number
+    public void setRoundNumber(int roundNumber) {
+        this.roundNumber = roundNumber;
+    }
+    // Method to get the list of players in the game
+    public List<Player> getPlayers() {
+        return players;
+    }
+    
+    // Method to get the points 
+    public Map<Player, Integer> getPoints() {
+        return points;
+    }
+
+    // Method to set the points
+    public void setPoints(Map<Player, Integer> points) {
+        this.points = points;
+    }
+    // Method to clear selectedNumbers
+    public void clearSelectedNumbers() {
+        selectedNumbers.clear();
+    }
     // Method to add a player to the game
     public void addPlayer(Player player) {
         if (players.size() < 6) { // Check if maximum players limit is reached
@@ -44,17 +92,7 @@ public class Game {
         locked = true;
         notifyPlayers(); // Notify players about game being locked
     }
-
-    // Method to set and get the game name
-    public String getName() {
-        return name;
-    }
-
-    // Method to set the game name
-    public void setName(String name) {
-        this.name = name;
-    }
-
+    
     // Method to start the game
     public void startGame() {
         // Check if minimum players requirement is met, then lock the game and start playing rounds
@@ -130,6 +168,7 @@ public class Game {
                 int playerPoints = points.get(player);
                 if (playerPoints > 0) {
                     points.put(player, playerPoints - 1);
+                    System.out.println("Player has " + player.getPoints());
                 }
             }
         }
@@ -148,7 +187,7 @@ public class Game {
         }
     }
 
-    // Method to notify players about round outcome
+    // This method to notify players about round outcome
     public void notifyRoundOutcome(List<Integer> selectedNumbers, List<Player> winners) {
         System.out.println("Round " + roundNumber + " Outcome:");
         System.out.println("Selected Numbers: " + selectedNumbers);
@@ -162,9 +201,8 @@ public class Game {
             System.out.println(
                     "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + points.get(player));
         }
-        System.out.println();
     }
-
+    
     // Method to notify players about game status
     public void notifyPlayers() {
         // Get the list of players in the game
@@ -176,7 +214,7 @@ public class Game {
     // Method to handle a player confirming readiness to start the game
     public void playerReady(Player player) {
         if (players.contains(player)) {
-            player.setReady(true); // Assuming Player class has a setReady method
+            player.setReady(true); 
             boolean allPlayersReady = true;
             for (Player p : players) {
                 if (!p.isReady()) {
@@ -198,15 +236,6 @@ public class Game {
         }
     }
 
-    // Method to get the current round number
-    public int getRoundNumber() {
-        return roundNumber;
-    }
-
-    // Method to get the list of players in the game
-    public List<Player> getPlayers() {
-        return players;
-    }
 
     // Method to get the points for a player
     public void makeGuess(Game game, Player player, int guess) {
