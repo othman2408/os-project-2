@@ -144,8 +144,7 @@ public class Client {
                     // Send the selected number to the server
                     client.sendMessage(Integer.toString(selectedNumber));
                     // Receive the result of the round from the server
-                    String roundResult = client.readMessage();
-                    System.out.println(roundResult);
+                    client.displayMessage();
                     // Check if game ended
                     String gameStatus = client.readMessage();
                     if (gameStatus.equals("end")) {
@@ -161,6 +160,7 @@ public class Client {
                     // If user doesn't want to play again, exit the game loop
                     break;
                 }
+                client.sendMessage(playAgain);
             }
         } catch (Exception e) {
             System.out.println("Error: " + e);

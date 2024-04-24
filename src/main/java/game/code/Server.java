@@ -88,7 +88,6 @@ public class Server {
     // This method starts the game
     public synchronized void startGame(Game game) {
         if (!gameManager.containsKey(game)) {
-            System.out.println("Thread: " + Thread.currentThread().getName() + " Starting game: " + game.getName());
             GameManager gameManagerThread = new GameManager(game);
             gameManager.put(game, gameManagerThread);
             gameManagerThread.start();    

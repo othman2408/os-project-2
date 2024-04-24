@@ -51,51 +51,57 @@ public class ClientHandler extends Thread {
             player.setPlayerSocket(playerSocket);
             String gameName = "";
             addPlayer(player);
-            // Send available games to the player
-            List<Game> games = getAvailableGames();
-            sendAvailableGames(games);
-            // Read the game name from the player
-            gameName = readMessage(playerSocket);
-            // Add the player to the game
-            joinGame(gameName, nickname);
-            Game currentGame = null;
-            for (Game game : games) {
-                if (game.getName().equals(gameName)) {
-                    currentGame = game;
+            while (true) {
+                // Send available games to the player
+                List<Game> games = getAvailableGames();
+                sendAvailableGames(games);
+                // Read the game name from the player
+                gameName = readMessage(playerSocket);
+                // Add the player to the game
+                joinGame(gameName, nickname);
+                Game currentGame = null;
+                for (Game game : games) {
+                    if (game.getName().equals(gameName)) {
+                        currentGame = game;
+                        break;
+                    }
+                }
+                // Send a message to the player that he joined the game
+                sendMessage("You now joined " + gameName + "!", playerSocket);
+                // Send to the player the list of players in the game
+                sendMessage(getGamePlayers(currentGame), playerSocket);
+                // Start the game when 2 player are in the lobby
+                while (currentGame.getPlayers().size() < 2) {
+                    sendMessage("Waiting for more players to join...", playerSocket);
+                    // sleep for 2 seconds
+                    Thread.sleep(2000);
+                }
+                // Minimum number of players satisfied
+                sendMessage("Match start", playerSocket);
+                // Prompt the players to ready up
+                sendMessage("Ready? (`yes` to start)", playerSocket);
+                do {
+                    String ready = readMessage(playerSocket);
+                    if (ready.equals("yes")) {
+                        player.setReady(true);
+                        break;
+                    }
+                } while (true);      
+                // Wait for players to ready up
+                while (!currentGame.allPlayersReady()) {
+                    System.out.println("Waiting for players to ready up...");
+                    Thread.sleep(2000);
+                }
+                // Game is handled by other threads (GameHandler & GameManager)
+                sendMessage("Game started!", playerSocket);
+                server.startGame(currentGame);
+                // Your here, u want the program to wait for the game to finish before playing again
+                // Player decides to play again or not
+                String choice = readMessage(playerSocket);
+                if (choice.equals("no")) {
                     break;
                 }
             }
-            // Send a message to the player that he joined the game
-            sendMessage("You now joined " + gameName + "!", playerSocket);
-            // Send to the player the list of players in the game
-            sendMessage(getGamePlayers(currentGame), playerSocket);
-            // Start the game when 2 player are in the lobby
-            while (currentGame.getPlayers().size() < 2) {
-                sendMessage("Waiting for more players to join...", playerSocket);
-                // sleep for 2 seconds
-                Thread.sleep(2000);
-            }
-            // Minimum number of players satisfied
-            sendMessage("Match start", playerSocket);
-            // Prompt the players to ready up
-            sendMessage("Ready? (`yes` to start)", playerSocket);
-            do {
-                String ready = readMessage(playerSocket);
-                if (ready.equals("yes")) {
-                    player.setReady(true);
-                    break;
-                }
-            } while (true);      
-            // Wait for players to ready up
-            while (!currentGame.allPlayersReady()) {
-                System.out.println("Waiting for players to ready up...");
-                Thread.sleep(2000);
-            }
-            // Game is handled by other threads (GameHandler & GameManager)
-            sendMessage("Game started!", playerSocket);
-            server.startGame(currentGame);
-            // sendMessage("Would you like to play again? (y/n)", playerSocket);
-            // choice = readMessage(playerSocket);
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
@@ -113,6 +119,14 @@ public class ClientHandler extends Thread {
         }
     }
 
+    // This method removes the game after it is finished
+    public void removeGame(Game game) {
+        synchronized (server) {
+            List<Game> games = server.getGames();
+            games.remove(game);
+            server.setGames(games);
+        }
+    }
     // This method gets all player names in a specific game
     public String getGamePlayers(Game game) {
         String ingamePlayers = "Players: ";

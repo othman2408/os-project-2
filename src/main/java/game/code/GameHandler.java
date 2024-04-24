@@ -21,7 +21,6 @@ public class GameHandler extends Thread {
     public void run() {
             int selectedNumber = Integer.parseInt(readMessage(playerSocket));
             game.getSelectedNumbers().add(selectedNumber);
-            System.out.println("Selected Numbers: " + game.getSelectedNumbers().toString());    
                 
     }
 
