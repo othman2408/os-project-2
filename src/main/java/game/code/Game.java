@@ -167,10 +167,10 @@ public class Game implements Serializable {
     public void deductPointsFromLosers(List<Player> winners) {
         for (Player player : players) {
             if (!winners.contains(player)) {
-                int playerPoints = points.get(player);
+                int playerPoints = player.getPoints();
                 if (playerPoints > 0) {
-                    points.put(player, playerPoints - 1);
-                    System.out.println("Player has " + player.getPoints());
+                    player.setPoints(playerPoints - 1);
+                    
                 }
             }
         }
@@ -180,7 +180,7 @@ public class Game implements Serializable {
     public void eliminatePlayersWithNoPoints() {
         List<Player> playersToRemove = new ArrayList<>();
         for (Player player : players) {
-            if (points.get(player) <= 0) {
+            if (player.getPoints() == 0) {
                 playersToRemove.add(player);
             }
         }

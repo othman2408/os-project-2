@@ -1,11 +1,6 @@
 package game.code;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -15,54 +10,22 @@ import java.util.Scanner;
 public class Client {
 
     private Socket server;
-    private BufferedReader strInput;
-    private BufferedReader userInput;
-    private PrintWriter strOutput;
-    private ObjectOutputStream objOutput;
-    private ObjectInputStream objInput;
     private Scanner scanner;
+
     public Client() {
         try {
             // Connect to the server
             this.server = new Socket("localhost", 44900);
-            // Reader and Writer initialization
-            this.strInput = new BufferedReader(new InputStreamReader(server.getInputStream()));
-            this.userInput = new BufferedReader(new InputStreamReader(System.in));
-            this.strOutput = new PrintWriter(server.getOutputStream(), true);
-            this.objOutput = new ObjectOutputStream(server.getOutputStream());
-            this.objInput = new ObjectInputStream(server.getInputStream());
             this.scanner = new Scanner(System.in);
         } catch (Exception e) {
             System.out.println("Error: " + e);
             
         }
-
     }
 
     // getters
     public Socket getServer() {
         return server;
-    }
-
-
-    public BufferedReader getInput() {
-        return strInput;
-    }
-
-    public BufferedReader getUserInput() {
-        return userInput;
-    }
-
-    public PrintWriter getOutput() {
-        return strOutput;
-    }
-
-    public ObjectOutputStream getOutputStream() {
-        return objOutput;
-    }
-
-    public ObjectInputStream getInputStream() {
-        return objInput;
     }
 
     public Scanner getScanner() {
@@ -130,9 +93,10 @@ public class Client {
                 // Game started
                 System.out.println("Game started!");
 
+                Scanner scanner = client.getScanner(); // initialize scanner
+
                 // Game round loop
                 while (true) {
-                    Scanner scanner = client.getScanner();
                     int selectedNumber;
                     System.out.println("Select a number between 1 and 100:");
                     selectedNumber = scanner.nextInt();
@@ -147,6 +111,7 @@ public class Client {
                     client.displayMessage();
                     // Check if game ended
                     String gameStatus = client.readMessage();
+                    System.out.println(gameStatus);
                     if (gameStatus.equals("end")) {
                         System.out.println("Game over!");
                         break; // Exit round loop as game is over
@@ -167,12 +132,7 @@ public class Client {
         } finally {
             System.out.println("Client closed.");
             try {
-                client.getInput().close();
-                client.getUserInput().close();
-                client.getOutput().close();
                 client.getServer().close();
-                client.getOutputStream().close();
-                client.getInputStream().close();
                 client.getScanner().close();
             } catch (Exception e) {
                 System.out.println("Error: " + e);
@@ -183,20 +143,21 @@ public class Client {
     // This method reads a message from the server
     public void displayMessage() {
         try {
-            // Recieve the message from the server
-            String message = strInput.readLine();
+            BufferedReader readFromServer = new BufferedReader(new InputStreamReader(server.getInputStream()));
+            // Receive the message from the server
+            String message = readFromServer.readLine();
             System.out.println(message);
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
     }
 
-    // This methods reads and returns a message from the server
+    // This method reads and returns a message from the server
     public String readMessage() {
         try {
-            // Recieve the message from the server
-            String message = strInput.readLine();
-            return message;
+            BufferedReader readFromServer = new BufferedReader(new InputStreamReader(server.getInputStream()));
+            // Receive the message from the server
+            return readFromServer.readLine();
         } catch (Exception e) {
             System.out.println("Error: " + e);
             return null;
@@ -205,8 +166,8 @@ public class Client {
     // This method reads the user input
     public String readUserInput() {
         try {
-            String data = userInput.readLine();
-            return data;
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+            return userInput.readLine();
         } catch (Exception e) {
             System.out.println("Error: " + e);
             return null;
@@ -216,7 +177,8 @@ public class Client {
     // This method sends the message to the server
     public void sendMessage(String data) {
         try {
-            strOutput.println(data);
+            PrintWriter writeToClient = new PrintWriter(server.getOutputStream(), true);
+            writeToClient.println(data);
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
@@ -225,21 +187,11 @@ public class Client {
     // This method sends an object to the server
     public void sendObject(Serializable object) {
         try {
+            ObjectOutputStream objOutput = new ObjectOutputStream(server.getOutputStream());
             objOutput.writeObject(object);
             objOutput.flush();
         } catch (Exception e) {
             System.out.println("Error: " + e);
-        }
-    }
-
-    // This method reads an object from the server
-    public Object readObject() {
-        try {
-            Object object = objInput.readObject();
-            return object;
-        } catch (Exception e) {
-            System.out.println("Error: " + e);
-            return null;
         }
     }
 }
