@@ -12,6 +12,8 @@ import java.util.Map;
 
 /*
  * This class is responsible for handling the connection with the player.
+ *
+ * 
  */
 
 public class ClientHandler extends Thread {
