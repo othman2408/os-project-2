@@ -17,14 +17,18 @@ public class GameManager extends Thread {
 
     public void run() {
         List<Socket> playersSockets = new ArrayList<>();
-        for (Player player : server.getPlayers()) {
+        for (Player player : game.getPlayers()) {
             playersSockets.add(player.getPlayerSocket());
         }
-        System.out.println("Starting the game with " + server.getPlayers().size() + " players");
+        System.out.println("Starting the game with " + game.getPlayers().size() + " players");
+        // Send the list of players in the game to all players
+        System.out.println("Game: " + game.getName());
+        broadcastMessage("Game started!", playersSockets);
+        broadcastMessage(game.getPlayers().toString(), playersSockets);
         List<GameHandler> gameHandlers = new ArrayList<>();
         while (true) {
             try {
-                for (Player player : server.getPlayers()) {
+                for (Player player : game.getPlayers()) {
                     GameHandler handler = new GameHandler(player.getPlayerSocket(), game, server);
                     gameHandlers.add(handler);
                 }
@@ -55,7 +59,7 @@ public class GameManager extends Thread {
                     break;
                 } else {
                     broadcastMessage("continue", playersSockets);
-                }
+                }    
             } catch (Exception e) {
                 System.out.println("Error: " + e);
             }
