@@ -8,17 +8,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 public class Server {
+    // Instantiate a signleton instance of the server
+    private static Server server = null;
+    private Semaphore semaphore = new Semaphore(1);
     private Map<String, String> ticketList; // Map to store ticket-to-nickname mappings
+    private Map<Game, GameManager> gameManager; // Map to store each gameManager with its game
+    private Map<Player, Game> playerMap; // Map to store each player with its gamea
     private List<Player> players; // List to store connected players
     private List<Game> games; // List to store active games
-    private Map<Game, GameManager> gameManager; // Map to store each gameManager with its game
     public Server() {
         ticketList = Collections.synchronizedMap(new HashMap<>());
+        gameManager = Collections.synchronizedMap(new HashMap<>());
+        playerMap = Collections.synchronizedMap(new HashMap<>());
         players = Collections.synchronizedList(new ArrayList<>());
         games = Collections.synchronizedList(new ArrayList<>());
-        gameManager = Collections.synchronizedMap(new HashMap<>());
+        if (server == null) {
+            server = this;
+        }
     }
 
     // get ticketList
@@ -43,11 +52,12 @@ public class Server {
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
-        int port = 44900;
+        int id = 0;
+        int PORT = 19400;
         try {
             Server server = new Server();
-            serverSocket = new ServerSocket(port);
-            System.out.println("Server started on port " + port);
+            serverSocket = new ServerSocket(PORT);
+            System.out.println("Server started on port " + PORT);
             while (true) {
                 Socket player = serverSocket.accept();
                 ClientHandler handler = new ClientHandler(player, server);
@@ -66,39 +76,36 @@ public class Server {
         }
     }
 
-    // This method starts the game
-    public synchronized void startGame(Game game, Server server) {
-        if (!gameManager.containsKey(game)) {
-            GameManager gameManagerThread = new GameManager(game, server);
-            gameManager.put(game, gameManagerThread);
-            gameManagerThread.start();    
-        }
+    // This method returns a ticket for a player
+    public String handleGetTicket(Socket playerSocket) {
+        String username = "";
+        try {
+            sendMessage("Enter your username: ", playerSocket);
+            username = readMessage(playerSocket);
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        } 
+        String ticket = getTicket(username);
+        sendMessage("Your ticket is: " + ticket, playerSocket);
+        return ticket;
     }
 
-    // This method adds a player to a game
-    public synchronized void joinGame(String gameName, Player player) {
-        boolean gameExists = false;
-        for (Game game : games) {
-            if (game.getName().equals(gameName) && player.getCurrentGame() == null && game.isLocked() == false) {
-                // Add player to existing game
-                game.addPlayer(player);
-                setPlayerCurrentGame(player, game);
-                gameExists = true;
-            } 
-
-        }
-        if (!gameExists) {
-            // Create a new game
-            Game game = new Game(gameName);
-            player.setCurrentGame(game);
-            game.addPlayer(player);
-            games.add(game);
-            System.out.println("Game " + gameName + " created.");
+    // This method returns a ticket for a given username
+    public String getTicket(String username) {
+        if (ticketList.containsKey(username)) {
+            return ticketList.get(username);
+        } else {
+            // create a new ticket and add it to the ticket list and create a player object and add him to players list
+            Ticket ticket = new Ticket(username);
+            ticketList.put(username, ticket.toString());
+            Player player = new Player(username, ticket);
+            players.add(player);
+            return ticket.toString();
         }
     }
 
     // This method sends the available games to players
-    public synchronized void sendAvailableGames(Socket playerSocket) {
+    public void getAvailableGames(Socket playerSocket) {
         try {
             // Send the available games to the player
             System.out.println("Sending available games to " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
@@ -115,116 +122,149 @@ public class Server {
             System.out.println("Error: " + e);
         }
     }
-
-    // This method returns a GameManager based on a given game
-    public GameManager getGameManagerForAGame(Game game) {
-        return gameManager.get(game);
-    }
-
-    // This method returns in game players
-    public String getGamePlayers(Game game) {
-        String ingamePlayers = "Players: ";
-        for (Player player : game.getPlayers()) {
-            ingamePlayers += player.getName() + " ";
+    
+    // This method adds a player to a chosen game given the gameName and ticket
+    public void joinGame(Socket playerSocket, String ticket) {
+        Game selectedGame = null;
+        Player player = null;
+        try {
+            // Get the game name from the player
+            sendMessage("Enter the game name: ", playerSocket); 
+            String gameName = readMessage(playerSocket);
+            // Check if the player has a ticket
+            if (ticketList.containsValue(ticket)) {
+                // Get the player's username
+                String username = "";
+                for (Map.Entry<String, String> entry : ticketList.entrySet()) {
+                    if (entry.getValue().equals(ticket)) {
+                        username = entry.getKey();
+                    }
+                }
+                // Find the player in the players list
+                for (Player p : players) {
+                    if (p.getName().equals(username)) {
+                        player = p;
+                        player.setPlayerSocket(playerSocket);
+                    }
+                }
+                // Check if the player is already in a game
+                if (playerMap.containsKey(player)) {
+                    sendMessage("You are already in a game", playerSocket);
+                } else {
+                    // Check if the game exists
+                    boolean gameExists = false;
+                    for (Game game : games) {
+                        if (game.getName().equals(gameName)) {
+                            gameExists = true;
+                            selectedGame = game;
+                        }
+                    }
+                    // Create a new game if it does not exist
+                    if (!gameExists) {
+                        selectedGame = new Game(gameName);
+                        games.add(selectedGame);
+                        System.out.println("Game " + gameName + " created.");
+                    }
+                    // Add the player to the game
+                    if (!playerMap.containsKey(player)) {
+                        playerMap.put(player, selectedGame);
+                        selectedGame.addPlayer(player);
+                        System.out.println("Player " + username + " joined " + selectedGame.getName());
+                        sendMessage("You have joined " + selectedGame.getName(), playerSocket);
+                    } 
+                }
+            } else {
+                sendMessage("Invalid ticket, try generating a new ticket to fix this issue.", playerSocket);
+                return;
+            }
+            startGame(selectedGame, server, playerSocket, player);
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
         }
-
-        return ingamePlayers;
     }
-
-    // This method removes the game
-    public synchronized void removeGame(Game game) {
-        gameManager.remove(game);
-        games.remove(game);
-    }
-    // This method adds a player to the players list
-    public synchronized void addPlayer(Player player) {
-        if (!players.contains(player)) {
-            System.out.println("Adding player " + player.getName() + " to the server");
-            players.add(player);
+    
+    // This method starts a game
+    public void startGame(Game game, Server server, Socket playerSocket, Player player) {
+        hasEnoughPlayers(game, playerSocket);
+        askPlayersToReady(player, playerSocket); 
+        // Start the game if all players are ready
+        while (!game.allPlayersReady()) {
+            try {
+                System.out.println("Waiting for other players to ready up...");
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                System.out.println("Error: " + e);
+            }
         }
-        else {
-            System.out.println("Player " + player.getName() + " already exists in the server");
+        synchronized (this) {
+            if (!gameManager.containsKey(game)) {
+                GameManager gameManagerThread = new GameManager(game, server);
+                gameManager.put(game, gameManagerThread);
+                gameManagerThread.start();  
+            }    
+        }
+        try {
+            gameManager.get(game).join();
+        } catch (InterruptedException e) {
+            System.out.println("Error: " + e);
         }
     }
+    
+    // This method asks players to ready up
+    public void askPlayersToReady(Player player, Socket playerSocket) {
+        sendMessage("Ready up! Type `ready` to start.", playerSocket);
+        do {
+            String isReady = readMessage(playerSocket);
+            if (isReady.equals("ready")) {
+                player.setReady(true);
+                break;
+            }
+        } while (true);    
+    }
 
-    // This method locks a game
-    public synchronized void lockGame(Game game) {
-        for (Game g : games) {
-            if (g.getName().equals(game.getName())) {
-                g.lockGame();
+    // This method check if a game has at least 2 players
+    public void hasEnoughPlayers(Game game, Socket playerSocket) {
+        while (game.getPlayers().size() < 2) {
+            try {
+                Thread.sleep(1000);
+                sendMessage("Waiting for other players to join...", playerSocket);
+            } catch (InterruptedException e) {
+                System.out.println("Error: " + e);
             }
         }
     }
-
-    // This method sets the player current game
-    public synchronized void setPlayerCurrentGame(Player player, Game game) {
-        // find the player
-        for (Player p : players) {
-            if (p.getName().equals(player.getName())) {
-                p.setCurrentGame(game);
-            }
-        }
-    }
-    // This method removes a player from the players list
-    public synchronized void removePlayer(Player player) {
-        if (players.contains(player)) {
-            System.out.println("Removing player " + player.getName() + " from the server");
-            players.remove(player);
-        }
-        else {
-            System.out.println("Player " + player.getName() + " does not exist in the server");
-        }
-    }
-
-    // This method creates a ticket for the player
-    public synchronized Ticket createTicket(String nickname) {
-        Ticket ticket;
-        // Get the ticket list from the server
-        System.out.println("Creating ticket for " + nickname);
-        // Create a ticket for the player if he does not exist in the ticket list
-        if (!hasTicket(nickname)) {
-            ticket = new Ticket();
-            ticketList.put(nickname, ticket.toString());
-            // Display to terminal the ticket created for the player
-            System.out.println("Ticket created for " + nickname + ": " + ticket);
-        } else {
-            // Ticket already exists for the player
-            System.out.println("Ticket already exists for " + nickname + ": " + ticketList.get(nickname));
-            ticket = new Ticket();
-            ticket.setTicket(ticketList.get(nickname));
-        }
-    return ticket;
-    }
-
-    // This method removes a GameManager of a specific game
-    public synchronized void removeGameManager(Game game) {
-        gameManager.remove(game);
-    }
-
-    // This method checks if a player has a ticket
-    public boolean hasTicket(String nickname) {
-        return ticketList.containsKey(nickname);
-    }
-
     // This method sends a message to the player
     public void sendMessage(String message, Socket playerSocket) {
         try {
-            PrintWriter writeToClient = new PrintWriter(playerSocket.getOutputStream(), true);
+            PrintWriter toClient = new PrintWriter(playerSocket.getOutputStream(), true);
             // Send the message to the player
             System.out.println("Sending message to " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
-            writeToClient.println(message);
+            toClient.println(message);
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
     }
 
+    // This method shows the menu to the player
+    public String getMenu() {
+        return "-----------------------\n" +
+                "1. Get a Ticket\n" +
+                "2. Available Games\n" +
+                "3. Join/Create a Game\n" +
+                "4. Get Player List\n" +
+                "5. Get Ticket List\n" +
+                "6. Get Game Player List\n" +
+                "7. Exit\n" +
+                "-----------------------";
+    }
+
     // This method reads a message from the player
     public String readMessage(Socket playerSocket) {
         try {
-            BufferedReader readFromClient = new BufferedReader((new InputStreamReader(playerSocket.getInputStream())));
+            BufferedReader fromClient = new BufferedReader((new InputStreamReader(playerSocket.getInputStream())));
             // Read the message from the player
             System.out.println("Reading message from " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
-            return readFromClient.readLine();
+            return fromClient.readLine();
         } catch (Exception e) {
             System.out.println("Error: " + e);
             return null;
@@ -234,10 +274,10 @@ public class Server {
     // This method reads an object from the server
     public Object readObject(Socket playerSocket) {
         try {
-            ObjectInputStream objInput = new ObjectInputStream(playerSocket.getInputStream());
+            ObjectInputStream objFromClient = new ObjectInputStream(playerSocket.getInputStream());
             // Read object from client
             System.out.println("Reading object from " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
-            return objInput.readObject();
+            return objFromClient.readObject();
         } catch (Exception e) {
             System.out.println("Error: " + e);
             return null;
