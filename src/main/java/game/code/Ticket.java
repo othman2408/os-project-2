@@ -1,4 +1,3 @@
-package game.code;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -7,19 +6,15 @@ public class Ticket {
 
     private static String ticket;
 
-    public Ticket() {
-        generateTicket(sequence());
+    public Ticket(String sequence) {
+        generateTicket(sequence);
     }
 
     public void setTicket(String newTicket) {
         ticket = newTicket;
     }
 
-    public String sequence() {
-        return "0";
-    }
-
-    public static String generateTicket(String sequence) {
+    public String generateTicket(String sequence) {
         byte[] hash = String.format("%32s", sequence).getBytes();
         try {
             for (int i = 0; i < Math.random() * 64 + 1; ++i) {
@@ -31,7 +26,7 @@ public class Ticket {
         return ticket = formatHexWithDelimiter(hash, ":").substring(78);
     }
 
-    private static String formatHexWithDelimiter(byte[] array, String delimiter) {
+    private String formatHexWithDelimiter(byte[] array, String delimiter) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : array) {
             String hex = Integer.toHexString(0xff & b);

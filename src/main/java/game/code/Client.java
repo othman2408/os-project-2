@@ -1,17 +1,14 @@
-package game.code;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 
-/*
- * This class Represents the client connecting to the server, which is the "Player" in our case.
- */
 public class Client {
 
     public static void main(String[] args) {
-        String SERVER_ADDRESS = "localhost";
-        int PORT = 19400;
+        final String SERVER_ADDRESS = "localhost";
+        final int PORT = 19400;
         Socket client = null;
         PrintWriter toServer = null;
         BufferedReader fromServer = null;
@@ -33,7 +30,7 @@ public class Client {
                     System.out.println(serverInput);
                     if (serverInput.equals("Goodbye!")) {
                         return;
-                    } 
+                    }
                 }
 
                 // Read user input from the console and send it to the server
@@ -41,7 +38,7 @@ public class Client {
                     userInput = fromUser.readLine();
                     toServer.println(userInput);
                     // Player joined a game
-                    if (userInput.equals("ready")) {
+                    if (userInput.equalsIgnoreCase("ready")) {
                         while (!fromServer.readLine().equals("Game started!")) {
                             System.out.println("Waiting for all players to ready up...");
                             try {
@@ -72,6 +69,23 @@ public class Client {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (client != null) {
+                    client.close();
+                }
+                if (toServer != null) {
+                    toServer.close();
+                }
+                if (fromServer != null) {
+                    fromServer.close();
+                }
+                if (fromUser != null) {
+                    fromUser.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

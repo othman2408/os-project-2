@@ -1,4 +1,3 @@
-package game.code;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.Scanner;
@@ -6,7 +5,7 @@ import java.util.Scanner;
 public class Player implements Serializable {
     private String name;
     private Socket playerSocket;
-    private String ticket;
+    private Ticket ticket;
     private int points;
     private int numOfwins;
     private int numOflosses;
@@ -14,7 +13,7 @@ public class Player implements Serializable {
     private Game currentGame;
     private int numberSelection;
 
-    public Player(String name, String ticket) {
+    public Player(String name, Ticket ticket) {
         this.name = name;
         this.ticket = ticket;
         this.points = 5; // start with 5 points for each player
@@ -88,7 +87,7 @@ public class Player implements Serializable {
         this.currentGame = currentGame;
     }
 
-    public String getTicket() {
+    public Ticket getTicket() {
         return ticket;
     }
      public String toString() {

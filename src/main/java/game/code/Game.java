@@ -1,5 +1,3 @@
-package game.code;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,17 +46,18 @@ public class Game implements Serializable {
     public void setSelectedNumbers(List<Integer> selectedNumbers) {
         this.selectedNumbers = selectedNumbers;
     }
-    
+
     // Method to set the current round number
     public void setRoundNumber(int roundNumber) {
         this.roundNumber = roundNumber;
     }
+
     // Method to get the list of players in the game
     public List<Player> getPlayers() {
         return players;
     }
-    
-    // Method to get the points 
+
+    // Method to get the points
     public Map<Player, Integer> getPoints() {
         return points;
     }
@@ -67,10 +66,12 @@ public class Game implements Serializable {
     public void setPoints(Map<Player, Integer> points) {
         this.points = points;
     }
+
     // Method to clear selectedNumbers
     public void clearSelectedNumbers() {
         selectedNumbers.clear();
     }
+
     // Method to add a player to the game
     public void addPlayer(Player player) {
         if (players.size() < 6) { // Check if maximum players limit is reached
@@ -92,14 +93,14 @@ public class Game implements Serializable {
     // Method to lock the game
     public void lockGame() {
         locked = true;
-        notifyPlayers(); // Notify players about game being locked
     }
-    
+
     // Method to start the game
     public void startGame() {
-        // Check if minimum players requirement is met, then lock the game and start playing rounds
+        // Check if minimum players requirement is met, then lock the game and start
+        // playing rounds
         if (players.size() >= 2) {
-            locked = true;
+            lockGame();
             playRounds();
         } else {
             System.out.println("2 or more players required to start the game.");
@@ -117,7 +118,8 @@ public class Game implements Serializable {
                 selectedNumbers.add(selectedNumber);
             }
             double average = calculateAverage(selectedNumbers);
-            // Determine round winners, deduct points from losers, and eliminate players with no points
+            // Determine round winners, deduct points from losers, and eliminate players
+            // with no points
             List<Player> winners = determineRoundWinners(selectedNumbers, average);
             deductPointsFromLosers(winners);
             eliminatePlayersWithNoPoints();
@@ -170,7 +172,7 @@ public class Game implements Serializable {
                 int playerPoints = player.getPoints();
                 if (playerPoints > 0) {
                     player.setPoints(playerPoints - 1);
-                    
+
                 }
             }
         }
@@ -204,7 +206,7 @@ public class Game implements Serializable {
                     "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + points.get(player));
         }
     }
-    
+
     // Method to notify players about game status
     public void notifyPlayers() {
         // Get the list of players in the game
@@ -216,7 +218,7 @@ public class Game implements Serializable {
     // Method to handle a player confirming readiness to start the game
     public void playerReady(Player player) {
         if (players.contains(player)) {
-            player.setReady(true); 
+            player.setReady(true);
             boolean allPlayersReady = true;
             for (Player p : players) {
                 if (!p.isReady()) {
@@ -237,7 +239,6 @@ public class Game implements Serializable {
             player.setNumberSelection(number);
         }
     }
-
 
     // Method to get the points for a player
     public void makeGuess(Game game, Player player, int guess) {

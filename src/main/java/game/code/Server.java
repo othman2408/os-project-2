@@ -1,6 +1,7 @@
-package game.code;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -8,17 +9,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 public class Server {
     // Instantiate a signleton instance of the server
     private static Server server = null;
-    private Semaphore semaphore = new Semaphore(1);
     private Map<String, String> ticketList; // Map to store ticket-to-nickname mappings
     private Map<Game, GameManager> gameManager; // Map to store each gameManager with its game
     private Map<Player, Game> playerMap; // Map to store each player with its gamea
     private List<Player> players; // List to store connected players
     private List<Game> games; // List to store active games
+
     public Server() {
         ticketList = Collections.synchronizedMap(new HashMap<>());
         gameManager = Collections.synchronizedMap(new HashMap<>());
@@ -30,34 +30,13 @@ public class Server {
         }
     }
 
-    // get ticketList
-    public Map<String, String> getTicketList() {
-        return ticketList;
-    }
-
-    // get players
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    // get games
-    public List<Game> getGames() {
-        return games;
-    }
-
-    // get gameManager
-    public Map<Game, GameManager> getGameManager() {
-        return gameManager;
-    }
-
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
-        int id = 0;
-        int PORT = 19400;
+        final int PORT = 19400;
         try {
             Server server = new Server();
             serverSocket = new ServerSocket(PORT);
-            System.out.println("Server started on port " + PORT);
+            System.out.println("Server started on PORT: " + PORT);
             while (true) {
                 Socket player = serverSocket.accept();
                 ClientHandler handler = new ClientHandler(player, server);
@@ -76,18 +55,55 @@ public class Server {
         }
     }
 
-    // This method returns a ticket for a player
+    // ==================== Getters ====================
+    public Map<String, String> getTicketList() {
+        return ticketList;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public List<Game> getGames() {
+        return games;
+    }
+
+    public Map<Game, GameManager> getGameManager() {
+        return gameManager;
+    }
+
+    // This method handles the generation of a ticket for a player
     public String handleGetTicket(Socket playerSocket) {
         String username = "";
         try {
-            sendMessage("Enter your username: ", playerSocket);
-            username = readMessage(playerSocket);
+            while (username.equals("")) {
+                sendMessage("Enter your username: ", playerSocket);
+                username = readMessage(playerSocket);
+
+            }
+
+            // Check if the username is already taken
+            if (isUsernameTaken(username)) {
+                sendMessage("Username already taken. Please try again.", playerSocket);
+                return null;
+            }
+
         } catch (Exception e) {
             System.out.println("Error: " + e);
-        } 
+        }
         String ticket = getTicket(username);
         sendMessage("Your ticket is: " + ticket, playerSocket);
         return ticket;
+    }
+
+    // This method checks if a username is already taken
+    private boolean isUsernameTaken(String username) {
+        for (Player player : players) {
+            if (player.getName().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // This method returns a ticket for a given username
@@ -95,7 +111,8 @@ public class Server {
         if (ticketList.containsKey(username)) {
             return ticketList.get(username);
         } else {
-            // create a new ticket and add it to the ticket list and create a player object and add him to players list
+            // generate a new ticket, add the player to the players list and return the
+            // ticket
             Ticket ticket = new Ticket(username);
             ticketList.put(username, ticket.toString());
             Player player = new Player(username, ticket);
@@ -108,7 +125,8 @@ public class Server {
     public void getAvailableGames(Socket playerSocket) {
         try {
             // Send the available games to the player
-            System.out.println("Sending available games to " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
+            System.out.println(
+                    "Sending available games to " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
             String message = "Available games: ";
             if (games.isEmpty()) {
                 Game game = new Game("Default lobby");
@@ -122,14 +140,35 @@ public class Server {
             System.out.println("Error: " + e);
         }
     }
-    
+
+    // This method sends the player list to the player.
+    public void handleGetPlayerList(Socket playerSocket) {
+        sendMessage("Player List: ", playerSocket);
+        sendMessage("╔══════════════════════════════════════╗", playerSocket);
+        sendMessage("║ Username          Ticket             ║", playerSocket);
+        sendMessage("╠══════════════════════════════════════╣", playerSocket);
+
+        // Loop over the ticket list and send the player list to the player
+        for (Map.Entry<String, String> entry : ticketList.entrySet()) {
+            String username = entry.getKey();
+            String ticket = entry.getValue();
+            sendMessage(String.format("║ %-16s %-12s   ║", username, ticket), playerSocket);
+        }
+
+        sendMessage("╚══════════════════════════════════════╝", playerSocket);
+    }
+
+    // =============================================================================
+    // ===============================| Game Methods |==============================
+    // =============================================================================
+
     // This method adds a player to a chosen game given the gameName and ticket
     public void joinGame(Socket playerSocket, String ticket) {
         Game selectedGame = null;
         Player player = null;
         try {
             // Get the game name from the player
-            sendMessage("Enter the game name: ", playerSocket); 
+            sendMessage("Enter the game name: ", playerSocket);
             String gameName = readMessage(playerSocket);
             // Check if the player has a ticket
             if (ticketList.containsValue(ticket)) {
@@ -171,7 +210,7 @@ public class Server {
                         selectedGame.addPlayer(player);
                         System.out.println("Player " + username + " joined " + selectedGame.getName());
                         sendMessage("You have joined " + selectedGame.getName(), playerSocket);
-                    } 
+                    }
                 }
             } else {
                 sendMessage("Invalid ticket, try generating a new ticket to fix this issue.", playerSocket);
@@ -182,11 +221,11 @@ public class Server {
             System.out.println("Error: " + e);
         }
     }
-    
+
     // This method starts a game
     public void startGame(Game game, Server server, Socket playerSocket, Player player) {
         hasEnoughPlayers(game, playerSocket);
-        askPlayersToReady(player, playerSocket); 
+        askPlayersToReady(player, playerSocket);
         // Start the game if all players are ready
         while (!game.allPlayersReady()) {
             try {
@@ -200,16 +239,18 @@ public class Server {
             if (!gameManager.containsKey(game)) {
                 GameManager gameManagerThread = new GameManager(game, server);
                 gameManager.put(game, gameManagerThread);
-                gameManagerThread.start();  
-            }    
+                gameManagerThread.start();
+            }
         }
         try {
             gameManager.get(game).join();
+            gameManager.remove(game);
+            games.remove(game);
         } catch (InterruptedException e) {
             System.out.println("Error: " + e);
         }
     }
-    
+
     // This method asks players to ready up
     public void askPlayersToReady(Player player, Socket playerSocket) {
         sendMessage("Ready up! Type `ready` to start.", playerSocket);
@@ -219,20 +260,21 @@ public class Server {
                 player.setReady(true);
                 break;
             }
-        } while (true);    
+        } while (true);
     }
 
     // This method check if a game has at least 2 players
     public void hasEnoughPlayers(Game game, Socket playerSocket) {
         while (game.getPlayers().size() < 2) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(1500);
                 sendMessage("Waiting for other players to join...", playerSocket);
             } catch (InterruptedException e) {
                 System.out.println("Error: " + e);
             }
         }
     }
+
     // This method sends a message to the player
     public void sendMessage(String message, Socket playerSocket) {
         try {
@@ -246,16 +288,17 @@ public class Server {
     }
 
     // This method shows the menu to the player
+    // This method generates the menu for the player
     public String getMenu() {
-        return "-----------------------\n" +
-                "1. Get a Ticket\n" +
-                "2. Available Games\n" +
-                "3. Join/Create a Game\n" +
-                "4. Get Player List\n" +
-                "5. Get Ticket List\n" +
-                "6. Get Game Player List\n" +
-                "7. Exit\n" +
-                "-----------------------";
+        return "╔══════════════════════╗\n" +
+                "║      Game Menu       ║\n" +
+                "╠══════════════════════╣\n" +
+                "║ 1. Get a Ticket      ║\n" +
+                "║ 2. Available Games   ║\n" +
+                "║ 3. Join/Create a Game║\n" +
+                "║ 4. Connected Players ║\n" +
+                "║ 5. Exit              ║\n" +
+                "╚══════════════════════╝";
     }
 
     // This method reads a message from the player
@@ -284,4 +327,60 @@ public class Server {
         }
     }
 
+}
+
+// =============================================================================
+// ===========================| Client Handler Thread |=========================
+// =============================================================================
+class ClientHandler extends Thread {
+    private final Server server;
+    private final Socket playerSocket;
+    private String ticket;
+
+    public ClientHandler(Socket playerSocket, Server server) {
+        this.playerSocket = playerSocket;
+        this.server = server;
+    }
+
+    public void run() {
+        try {
+            System.out.println(
+                    "Connection established with " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
+            server.sendMessage("Welcome to the famous 2/3 Game!", playerSocket);
+            do {
+                server.sendMessage(server.getMenu(), playerSocket);
+                server.sendMessage("Enter your choice: ", playerSocket);
+                String choice = server.readMessage(playerSocket);
+                System.out.println("Client choice: " + choice);
+                switch (choice) {
+                    case "1":
+                        ticket = server.handleGetTicket(playerSocket);
+                        break;
+                    case "2":
+                        server.getAvailableGames(playerSocket);
+                        break;
+                    case "3":
+                        server.joinGame(playerSocket, ticket);
+                        break;
+                    case "4":
+                        server.handleGetPlayerList(playerSocket);
+                        break;
+                    case "5":
+                        server.sendMessage("Goodbye!", playerSocket);
+                        return;
+                    default:
+                        server.sendMessage("Invalid choice. Please try again.", playerSocket);
+                }
+            } while (true);
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        } finally {
+            try {
+                playerSocket.close();
+            } catch (Exception e) {
+                System.out.println("Error: " + e);
+            }
+        }
+
+    }
 }

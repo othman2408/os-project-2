@@ -1,8 +1,4 @@
-package game.code;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +6,7 @@ import java.util.List;
 public class GameManager extends Thread {
     private final Server server;
     private final Game game;
+
     public GameManager(Game game, Server server) {
         this.game = game;
         this.server = server;
@@ -32,7 +29,7 @@ public class GameManager extends Thread {
                     GameHandler handler = new GameHandler(player.getPlayerSocket(), game, server);
                     gameHandlers.add(handler);
                 }
-        
+
                 for (GameHandler handler : gameHandlers) {
                     handler.start();
                 }
@@ -48,7 +45,7 @@ public class GameManager extends Thread {
                 System.out.println("Selected Numbers: " + selectedNumbers.toString());
                 double average = game.calculateAverage(selectedNumbers);
                 List<Player> winners = game.determineRoundWinners(selectedNumbers, average);
-                game.deductPointsFromLosers(winners); 
+                game.deductPointsFromLosers(winners);
                 game.eliminatePlayersWithNoPoints();
                 notifyRoundOutcome(selectedNumbers, winners, playersSockets);
                 game.setRoundNumber(game.getRoundNumber() + 1);
@@ -59,14 +56,14 @@ public class GameManager extends Thread {
                     break;
                 } else {
                     broadcastMessage("continue", playersSockets);
-                }    
+                }
             } catch (Exception e) {
                 System.out.println("Error: " + e);
             }
             game.clearSelectedNumbers();
             gameHandlers.clear();
         }
-    } 
+    }
 
     // This method broadcasts a message to all players
     public void broadcastMessage(String message, List<Socket> playersSockets) {
@@ -74,6 +71,7 @@ public class GameManager extends Thread {
             server.sendMessage(message, playerSocket);
         }
     }
+
     // This method to notify players about round outcome
     public void notifyRoundOutcome(List<Integer> selectedNumbers, List<Player> winners, List<Socket> playerSockets) {
         // Create one string message to broadcast to all players
@@ -86,9 +84,28 @@ public class GameManager extends Thread {
             } else {
                 outcome = "Loser";
             }
-            message += "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + player.getPoints() + " ";
+            message += "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + player.getPoints()
+                    + " ";
         }
         broadcastMessage(message, playerSockets);
     }
-    
+
+}
+
+class GameHandler extends Thread {
+    private final Socket playerSocket;
+    private final Game game;
+    private final Server server;
+
+    public GameHandler(Socket playerSocket, Game game, Server server) {
+        this.playerSocket = playerSocket;
+        this.game = game;
+        this.server = server;
+
+    }
+
+    public void run() {
+        int selectedNumber = Integer.parseInt(server.readMessage(playerSocket));
+        game.getSelectedNumbers().add(selectedNumber);
+    }
 }
