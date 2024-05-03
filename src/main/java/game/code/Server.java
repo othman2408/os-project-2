@@ -1,3 +1,5 @@
+package game.code;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -9,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public class Server {
     // Instantiate a signleton instance of the server
