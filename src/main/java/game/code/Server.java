@@ -8,10 +8,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.stream.Collectors;
 
 public class Server {
     // Instantiate a signleton instance of the server
@@ -21,6 +22,7 @@ public class Server {
     private Map<Player, Game> playerMap; // Map to store each player with its gamea
     private List<Player> players; // List to store connected players
     private List<Game> games; // List to store active games
+    private Map<Player, Integer> leaderboard; // Map to store player points
 
     public Server() {
         ticketList = Collections.synchronizedMap(new HashMap<>());
@@ -28,6 +30,7 @@ public class Server {
         playerMap = Collections.synchronizedMap(new HashMap<>());
         players = Collections.synchronizedList(new ArrayList<>());
         games = Collections.synchronizedList(new ArrayList<>());
+        leaderboard = Collections.synchronizedMap(new HashMap<>());
         if (server == null) {
             server = this;
         }
@@ -161,6 +164,32 @@ public class Server {
         sendMessage("╚══════════════════════════════════════╝", playerSocket);
     }
 
+    // This method updates the leaderboard
+    public void updateLeaderboard() {
+        leaderboard = players.stream()
+                .sorted(Comparator.comparingInt(Player::getNumOfWins).reversed())
+                .limit(5)
+                .collect(Collectors.toMap(player -> player, Player::getNumOfWins));
+    }
+
+    // Print the leaderboard
+    public void printLeaderboard(Socket playerSocket) {
+        sendMessage("Leaderboard: ", playerSocket);
+        sendMessage("╔══════════════════════════════════════╗", playerSocket);
+        sendMessage("║ Username          Wins               ║", playerSocket);
+        sendMessage("╠══════════════════════════════════════╣", playerSocket);
+
+        // Loop over the leaderboard and send the leaderboard to the player
+        for (Map.Entry<Player, Integer> entry : leaderboard.entrySet()) {
+            String username = entry.getKey().getName();
+            int wins = entry.getValue();
+            sendMessage(String.format("║ %-16s %-16d     ║", username, wins), playerSocket);
+        }
+
+        sendMessage("╚══════════════════════════════════════╝", playerSocket);
+
+    }
+
     // =============================================================================
     // ===============================| Game Methods |==============================
     // =============================================================================
@@ -238,8 +267,9 @@ public class Server {
                 System.out.println("Error: " + e);
             }
         }
-        synchronized (this) {
-            if (!gameManager.containsKey(game)) {
+        // Start the game
+        if (!gameManager.containsKey(game)) {
+            synchronized (this) {
                 GameManager gameManagerThread = new GameManager(game, server);
                 gameManager.put(game, gameManagerThread);
                 gameManagerThread.start();
@@ -251,6 +281,10 @@ public class Server {
             games.remove(game);
         } catch (InterruptedException e) {
             System.out.println("Error: " + e);
+        } finally {
+            // make the player leave the game
+            playerMap.remove(player);
+            player.setPlayerSocket(null); // Resetting player's socket
         }
     }
 
@@ -270,7 +304,7 @@ public class Server {
     public void hasEnoughPlayers(Game game, Socket playerSocket) {
         while (game.getPlayers().size() < 2) {
             try {
-                Thread.sleep(1500);
+                Thread.sleep(2000);
                 sendMessage("Waiting for other players to join...", playerSocket);
             } catch (InterruptedException e) {
                 System.out.println("Error: " + e);
@@ -300,7 +334,8 @@ public class Server {
                 "║ 2. Available Games   ║\n" +
                 "║ 3. Join/Create a Game║\n" +
                 "║ 4. Connected Players ║\n" +
-                "║ 5. Exit              ║\n" +
+                "║ 5. Leaderboard       ║\n" +
+                "║ 6. Exit              ║\n" +
                 "╚══════════════════════╝";
     }
 
@@ -369,8 +404,11 @@ class ClientHandler extends Thread {
                         server.handleGetPlayerList(playerSocket);
                         break;
                     case "5":
+                        server.printLeaderboard(playerSocket);
+                        break;
+                    case "6":
                         server.sendMessage("Goodbye!", playerSocket);
-                        return;
+                        break;
                     default:
                         server.sendMessage("Invalid choice. Please try again.", playerSocket);
                 }

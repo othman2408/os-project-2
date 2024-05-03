@@ -1,5 +1,6 @@
 package game.code;
 
+
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,8 @@ public class GameManager extends Thread {
                 if (game.getPlayers().size() == 1) {
                     game.endGame();
                     broadcastMessage("end", playersSockets);
+                    incrementWinnerWins(game.getPlayers().get(0));
+                    server.updateLeaderboard();
                     break;
                 } else {
                     broadcastMessage("continue", playersSockets);
@@ -91,8 +94,16 @@ public class GameManager extends Thread {
         broadcastMessage(message, playerSockets);
     }
 
+    // Increment the number of wins for the winner
+    private void incrementWinnerWins(Player winner) {
+        winner.setNumOfWins(winner.getNumOfWins() + 1);
+    }
+
 }
 
+// =========================================================================
+// ========================| Game Handler |=================================
+// =========================================================================
 class GameHandler extends Thread {
     private final Socket playerSocket;
     private final Game game;
