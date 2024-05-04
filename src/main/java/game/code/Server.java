@@ -50,9 +50,7 @@ public class Server {
             }
         } catch (Exception e) {
             System.out.println("Error: " + e);
-        }
-
-        finally {
+        } finally {
             try {
                 serverSocket.close();
             } catch (Exception e) {
@@ -286,6 +284,8 @@ public class Server {
                 gameManagerThread.start();
             }
         }
+
+        // Wait for the game to finish
         try {
             gameManager.get(game).join();
             gameManager.remove(game);
@@ -295,6 +295,7 @@ public class Server {
         } finally {
             // Reset the player's ready status and remove the player from the game
             player.setReady(false);
+            player.setPoints(5);
             playerMap.remove(player);
             player.setPlayerSocket(null); // Resetting player's socket
         }
@@ -305,7 +306,7 @@ public class Server {
         sendMessage("Ready up! Type `ready` to start.", playerSocket);
         do {
             String isReady = readMessage(playerSocket);
-            if (isReady.equals("ready")) {
+            if (isReady.equalsIgnoreCase("ready") || isReady.equalsIgnoreCase("r") || isReady.equalsIgnoreCase("")) {
                 player.setReady(true);
                 break;
             }
@@ -324,6 +325,10 @@ public class Server {
         }
     }
 
+    // =============================================================================
+    // ===============================| I/O Methods |===============================
+    // =============================================================================
+
     // This method sends a message to the player
     public void sendMessage(String message, Socket playerSocket) {
         try {
@@ -334,21 +339,6 @@ public class Server {
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
-    }
-
-    // This method shows the menu to the player
-    // This method generates the menu for the player
-    public String getMenu() {
-        return "╔══════════════════════╗\n" +
-                "║      Game Menu       ║\n" +
-                "╠══════════════════════╣\n" +
-                "║ 1. Get a Ticket      ║\n" +
-                "║ 2. Available Games   ║\n" +
-                "║ 3. Join/Create a Game║\n" +
-                "║ 4. Connected Players ║\n" +
-                "║ 5. Leaderboard       ║\n" +
-                "║ 6. Exit              ║\n" +
-                "╚══════════════════════╝";
     }
 
     // This method reads a message from the player
@@ -375,6 +365,20 @@ public class Server {
             System.out.println("Error: " + e);
             return null;
         }
+    }
+
+    // This method generates the menu for the player
+    public String getMenu() {
+        return "╔══════════════════════╗\n" +
+                "║      Game Menu       ║\n" +
+                "╠══════════════════════╣\n" +
+                "║ 1. Get a Ticket      ║\n" +
+                "║ 2. Available Games   ║\n" +
+                "║ 3. Join/Create a Game║\n" +
+                "║ 4. Connected Players ║\n" +
+                "║ 5. Leaderboard       ║\n" +
+                "║ 6. Exit              ║\n" +
+                "╚══════════════════════╝";
     }
 
 }
