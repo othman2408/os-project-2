@@ -19,7 +19,7 @@ public class Server {
     private static Server server = null;
     private Map<String, String> ticketList; // Map to store ticket-to-nickname mappings
     private Map<Game, GameManager> gameManager; // Map to store each gameManager with its game
-    private Map<Player, Game> playerMap; // Map to store each player with its gamea
+    private Map<Player, Game> playerMap; // Map to store each player with its game
     private List<Player> players; // List to store connected players
     private List<Game> games; // List to store active games
     private Map<Player, Integer> leaderboard; // Map to store player points
@@ -149,19 +149,23 @@ public class Server {
 
     // This method sends the player list to the player.
     public void handleGetPlayerList(Socket playerSocket) {
-        sendMessage("Player List: ", playerSocket);
-        sendMessage("╔══════════════════════════════════════╗", playerSocket);
-        sendMessage("║ Username          Ticket             ║", playerSocket);
-        sendMessage("╠══════════════════════════════════════╣", playerSocket);
+        StringBuilder msg = new StringBuilder();
+        msg.append("Player List: \n");
+        msg.append("╔══════════════════════════════════════╗\n");
+        msg.append("║ Username         Ticket              ║\n");
+        msg.append("╠══════════════════════════════════════╣\n");
 
-        // Loop over the ticket list and send the player list to the player
+        // Loop over the ticket list and build the player list message
         for (Map.Entry<String, String> entry : ticketList.entrySet()) {
             String username = entry.getKey();
             String ticket = entry.getValue();
-            sendMessage(String.format("║ %-16s %-12s   ║", username, ticket), playerSocket);
+            msg.append(String.format("║ %-17s %-11s   ║\n", username, ticket));
         }
 
-        sendMessage("╚══════════════════════════════════════╝", playerSocket);
+        msg.append("╚══════════════════════════════════════╝\n");
+
+        // Send the built message to the player
+        sendMessage(msg.toString(), playerSocket);
     }
 
     // This method updates the leaderboard
@@ -174,20 +178,23 @@ public class Server {
 
     // Print the leaderboard
     public void printLeaderboard(Socket playerSocket) {
-        sendMessage("Leaderboard: ", playerSocket);
-        sendMessage("╔══════════════════════════════════════╗", playerSocket);
-        sendMessage("║ Username          Wins               ║", playerSocket);
-        sendMessage("╠══════════════════════════════════════╣", playerSocket);
+        StringBuilder msg = new StringBuilder();
+        msg.append("Leaderboard: \n");
+        msg.append("╔══════════════════════════════════════╗\n");
+        msg.append("║ Username          Wins               ║\n");
+        msg.append("╠══════════════════════════════════════╣\n");
 
-        // Loop over the leaderboard and send the leaderboard to the player
+        // Loop over the leaderboard and build the leaderboard message
         for (Map.Entry<Player, Integer> entry : leaderboard.entrySet()) {
             String username = entry.getKey().getName();
             int wins = entry.getValue();
-            sendMessage(String.format("║ %-16s %-16d     ║", username, wins), playerSocket);
+            msg.append(String.format("║ %-16s %-16d     ║\n", username, wins));
         }
 
-        sendMessage("╚══════════════════════════════════════╝", playerSocket);
+        msg.append("╚══════════════════════════════════════╝\n");
 
+        // Send the built message to the player
+        sendMessage(msg.toString(), playerSocket);
     }
 
     // =============================================================================
@@ -256,13 +263,17 @@ public class Server {
 
     // This method starts a game
     public void startGame(Game game, Server server, Socket playerSocket, Player player) {
+
+        // Check if the game has at least 2 players
         hasEnoughPlayers(game, playerSocket);
+        // Ask players to ready up
         askPlayersToReady(player, playerSocket);
+
         // Start the game if all players are ready
         while (!game.allPlayersReady()) {
             try {
                 System.out.println("Waiting for other players to ready up...");
-                Thread.sleep(2000);
+                Thread.sleep(1500);
             } catch (InterruptedException e) {
                 System.out.println("Error: " + e);
             }
@@ -282,7 +293,8 @@ public class Server {
         } catch (InterruptedException e) {
             System.out.println("Error: " + e);
         } finally {
-            // make the player leave the game
+            // Reset the player's ready status and remove the player from the game
+            player.setReady(false);
             playerMap.remove(player);
             player.setPlayerSocket(null); // Resetting player's socket
         }
