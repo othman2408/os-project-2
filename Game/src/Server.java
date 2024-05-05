@@ -74,38 +74,18 @@ public class Server {
         return gameManager;
     }
 
-    // This method handles the generation of a ticket for a player
+    // This method returns a ticket for a player
     public String handleGetTicket(Socket playerSocket) {
         String username = "";
         try {
-            while (username.equals("")) {
-                sendMessage("Enter your username: ", playerSocket);
-                username = readMessage(playerSocket);
-
-            }
-
-            // Check if the username is already taken
-            if (isUsernameTaken(username)) {
-                sendMessage("Username already taken. Please try again.", playerSocket);
-                return null;
-            }
-
+            sendMessage("Enter your username: ", playerSocket);
+            username = readMessage(playerSocket);
         } catch (Exception e) {
             System.out.println("Error: " + e);
-        }
+        } 
         String ticket = getTicket(username);
         sendMessage("Your ticket is: " + ticket, playerSocket);
         return ticket;
-    }
-
-    // This method checks if a username is already taken
-    private boolean isUsernameTaken(String username) {
-        for (Player player : players) {
-            if (player.getName().equals(username)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // This method returns a ticket for a given username
@@ -113,8 +93,7 @@ public class Server {
         if (ticketList.containsKey(username)) {
             return ticketList.get(username);
         } else {
-            // generate a new ticket, add the player to the players list and return the
-            // ticket
+            // generate a new ticket, add the player to the players list and return the ticket
             Ticket ticket = new Ticket(username);
             ticketList.put(username, ticket.toString());
             Player player = new Player(username, ticket);
@@ -302,7 +281,7 @@ public class Server {
         sendMessage("Ready up! Type `ready` to start.", playerSocket);
         do {
             String isReady = readMessage(playerSocket);
-            if (isReady.equalsIgnoreCase("ready") || isReady.equalsIgnoreCase("r") || isReady.equalsIgnoreCase("")) {
+            if (isReady.equalsIgnoreCase("ready") || isReady.equalsIgnoreCase("r") || isReady.isEmpty()) {
                 player.setReady(true);
                 break;
             }
