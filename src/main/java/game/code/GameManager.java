@@ -1,6 +1,5 @@
 package game.code;
 
-
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,11 +75,17 @@ public class GameManager extends Thread {
         }
     }
 
+    // Increment the number of wins for the winner
+    private void incrementWinnerWins(Player winner) {
+        winner.setNumOfWins(winner.getNumOfWins() + 1);
+    }
+
     // This method to notify players about round outcome
     public void notifyRoundOutcome(List<Integer> selectedNumbers, List<Player> winners, List<Socket> playerSockets) {
-        // Create one string message to broadcast to all players
-        String message = "Round " + game.getRoundNumber() + " Outcome: ";
-        message += "Selected Numbers: " + selectedNumbers.toString() + " ";
+        StringBuilder message = new StringBuilder();
+        message.append("Round ").append(game.getRoundNumber()).append(" Outcome: \n");
+        message.append("Selected Numbers: ").append(selectedNumbers.toString()).append("\n");
+        message.append("╔════════════════════════════════════════════════════════╗\n");
         for (Player player : game.getPlayers()) {
             String outcome;
             if (winners.contains(player)) {
@@ -88,15 +93,12 @@ public class GameManager extends Thread {
             } else {
                 outcome = "Loser";
             }
-            message += "Player: " + player.getName() + ", Outcome: " + outcome + ", Points: " + player.getPoints()
-                    + " ";
+            message.append("║ Player: ").append(String.format("%-16s", player.getName()))
+                    .append(" Outcome: ").append(String.format("%-7s", outcome))
+                    .append(" Points: ").append(String.format("%-4d", player.getPoints())).append(" ║\n");
         }
-        broadcastMessage(message, playerSockets);
-    }
-
-    // Increment the number of wins for the winner
-    private void incrementWinnerWins(Player winner) {
-        winner.setNumOfWins(winner.getNumOfWins() + 1);
+        message.append("╚════════════════════════════════════════════════════════╝\n");
+        broadcastMessage(message.toString(), playerSockets);
     }
 
 }

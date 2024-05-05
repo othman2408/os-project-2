@@ -186,7 +186,7 @@ public class Server {
         for (Map.Entry<Player, Integer> entry : leaderboard.entrySet()) {
             String username = entry.getKey().getName();
             int wins = entry.getValue();
-            msg.append(String.format("║ %-16s %-16d     ║\n", username, wins));
+            msg.append(String.format("║ %-16s %-16d    ║\n", username, wins));
         }
 
         msg.append("╚══════════════════════════════════════╝\n");
@@ -294,8 +294,7 @@ public class Server {
             System.out.println("Error: " + e);
         } finally {
             // Reset the player's ready status and remove the player from the game
-            player.setReady(false);
-            player.setPoints(5);
+            player.resetPlayer();
             playerMap.remove(player);
             player.setPlayerSocket(null); // Resetting player's socket
         }

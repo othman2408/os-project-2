@@ -111,5 +111,10 @@ public class Player implements Serializable {
     public void setNumOfLosses(int numOflosses) {
         this.numOflosses = numOflosses;
     }
+
+    public void resetPlayer() {
+        this.points = 5;
+        this.ready = false;
+    }
     
 }
