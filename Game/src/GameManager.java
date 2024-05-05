@@ -1,4 +1,6 @@
+import java.io.IOException;
 import java.net.Socket;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class GameManager extends Thread {
                 for (GameHandler handler : gameHandlers) {
                     handler.start();
                 }
-
+                
                 for (GameHandler handler : gameHandlers) {
                     try {
                         handler.join();
@@ -51,13 +53,10 @@ public class GameManager extends Thread {
                 System.out.println("Number of players left: " + game.getPlayers().size());
                 if (game.getPlayers().size() == 1) {
                     game.endGame();
-                    broadcastMessage("end", playersSockets);
                     incrementWinnerWins(game.getPlayers().get(0));
                     server.updateLeaderboard();
                     break;
-                } else {
-                    broadcastMessage("continue", playersSockets);
-                }
+                } 
             } catch (Exception e) {
                 System.out.println("Error: " + e);
             }
@@ -108,12 +107,13 @@ class GameHandler extends Thread {
     private final Socket playerSocket;
     private final Game game;
     private final Server server;
+    private TimeoutHandler timeoutHandler;
 
     public GameHandler(Socket playerSocket, Game game, Server server) {
         this.playerSocket = playerSocket;
         this.game = game;
         this.server = server;
-
+        timeoutHandler = new TimeoutHandler(playerSocket, server);
     }
 
     public void run() {
@@ -121,9 +121,11 @@ class GameHandler extends Thread {
         boolean validInput = false;
         do {
             try {
+                timeoutHandler.start();
                 server.sendMessage("Enter a number between 1 and 100: ", playerSocket);
                 String input = server.readMessage(playerSocket);
                 selectedNumber = Integer.parseInt(input);
+                timeoutHandler.restartTime();
                 if (selectedNumber >= 1 && selectedNumber <= 100) {
                     validInput = true;
                 } else {
@@ -134,5 +136,37 @@ class GameHandler extends Thread {
             }
         } while (!validInput);
         game.getSelectedNumbers().add(selectedNumber);
+    }
+}
+
+// ============================================================================================
+// =================================| TimeoutHandler |=========================================
+// ============================================================================================
+class TimeoutHandler extends Thread {
+    private final Socket playerSocket;
+    private final Server server;
+    private long endTime;
+
+    public TimeoutHandler(Socket playerSocket, Server server) {
+        this.playerSocket = playerSocket;
+        this.server = server;
+    }
+
+    public void run() {
+        try {
+            endTime = System.currentTimeMillis() + 60000;
+            do {
+                Thread.sleep(3000);
+            } while (System.currentTimeMillis() < endTime);
+            server.sendMessage("Time's up! You did not enter a number, connection closed.", playerSocket);
+            playerSocket.close();
+        } catch (InterruptedException | IOException e) {
+            System.out.println("Error: " + e);
+        }
+    }
+
+    public void restartTime() {
+        endTime = System.currentTimeMillis() + 60000;
+        System.out.println("Time restarted...");
     }
 }
