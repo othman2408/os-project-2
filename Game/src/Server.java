@@ -294,7 +294,6 @@ public class Server {
             // Reset the player's ready status and remove the player from the game
             player.resetPlayer();
             playerMap.remove(player);
-            player.setPlayerSocket(null); // Resetting player's socket
         }
     }
 

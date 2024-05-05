@@ -120,7 +120,7 @@ public class Game implements Serializable {
             double average = calculateAverage(selectedNumbers);
             // Determine round winners, deduct points from losers, and eliminate players
             // with no points
-            List<Player> winners = determineRoundWinners(selectedNumbers, average);
+            List<Player> winners = determineRoundWinners(selectedNumbers, players, average);
             deductPointsFromLosers(winners);
             eliminatePlayersWithNoPoints();
             notifyRoundOutcome(selectedNumbers, winners);
@@ -148,12 +148,12 @@ public class Game implements Serializable {
     }
 
     // Method to determine round winners
-    public List<Player> determineRoundWinners(List<Integer> selectedNumbers, double average) {
+    public List<Player> determineRoundWinners(List<Integer> selectedNumbers, List<Player> players, double average) {
         List<Player> winners = new ArrayList<>();
         double twoThirdsAverage = (2.0 / 3.0) * average;
         double minDifference = Double.MAX_VALUE;
         for (int i = 0; i < selectedNumbers.size(); i++) {
-            double difference = Math.abs(selectedNumbers.get(i) - twoThirdsAverage);
+            double difference = Math.abs(players.get(i).getNumberSelection() - twoThirdsAverage);
             if (difference <= minDifference) {
                 if (difference < minDifference) {
                     winners.clear();
@@ -230,6 +230,17 @@ public class Game implements Serializable {
                 startGame(); // Start the game if all players are ready
             }
         }
+    }
+
+    // This method checks if the game is in the last round
+    public boolean isLastRound() {
+        if (players.size() == 2) {
+            // Check if both players have 1 point
+            if (players.get(0).getPoints() == 1 || players.get(1).getPoints() == 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Method to handle a player selecting a number for the round

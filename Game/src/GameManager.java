@@ -27,7 +27,7 @@ public class GameManager extends Thread {
         while (true) {
             try {
                 for (Player player : game.getPlayers()) {
-                    GameHandler handler = new GameHandler(player.getPlayerSocket(), game, server);
+                    GameHandler handler = new GameHandler(player, game, server);
                     gameHandlers.add(handler);
                 }
 
@@ -43,9 +43,42 @@ public class GameManager extends Thread {
                     }
                 }
                 List<Integer> selectedNumbers = game.getSelectedNumbers();
+                if (selectedNumbers.size() == 0) {
+                    System.out.println("No numbers selected. Ending game...");
+                    break;
+                }
                 System.out.println("Selected Numbers: " + selectedNumbers.toString());
+                // Check if one player chooses 0 and the other player chooses a number > 0
+                if (game.getPlayers().size() == 2 && game.isLastRound()) {
+                    Player player1 = game.getPlayers().get(0);
+                    Player player2 = game.getPlayers().get(1);
+                    if (selectedNumbers.contains(0)) {
+                        int indexOfZero = selectedNumbers.indexOf(0);
+                        if (indexOfZero == 0 && selectedNumbers.get(1) > 0) {
+                            List<Player> winners = new ArrayList<>();
+                            winners.add(player2);
+                            game.deductPointsFromLosers(winners); // Deduct points from losing player
+                            game.eliminatePlayersWithNoPoints(); // Eliminate player with no points
+                            notifyRoundOutcome(selectedNumbers, winners, playersSockets);
+                            game.endGame(); // End the game
+                            incrementWinnerWins(player2); // Increment winner's wins
+                            server.updateLeaderboard(); // Update leaderboard
+                            break;
+                        } else if (indexOfZero == 1 && selectedNumbers.get(0) > 0) {
+                            List<Player> winners = new ArrayList<>();
+                            winners.add(player1);
+                            game.deductPointsFromLosers(winners); // Deduct points from losing player
+                            game.eliminatePlayersWithNoPoints(); // Eliminate player with no points
+                            notifyRoundOutcome(selectedNumbers, winners, playersSockets);
+                            game.endGame(); // End the game
+                            incrementWinnerWins(player1); // Increment winner's wins
+                            server.updateLeaderboard(); // Update leaderboard
+                            break;
+                        }
+                    }
+                }    
                 double average = game.calculateAverage(selectedNumbers);
-                List<Player> winners = game.determineRoundWinners(selectedNumbers, average);
+                List<Player> winners = game.determineRoundWinners(selectedNumbers, game.getPlayers(), average);
                 game.deductPointsFromLosers(winners);
                 game.eliminatePlayersWithNoPoints();
                 notifyRoundOutcome(selectedNumbers, winners, playersSockets);
@@ -110,16 +143,16 @@ public class GameManager extends Thread {
 // ========================| Game Handler |=================================
 // =========================================================================
 class GameHandler extends Thread {
-    private final Socket playerSocket;
+    private final Player player;
     private final Game game;
     private final Server server;
     private TimeoutHandler timeoutHandler;
 
-    public GameHandler(Socket playerSocket, Game game, Server server) {
-        this.playerSocket = playerSocket;
+    public GameHandler(Player player, Game game, Server server) {
+        this.player = player;
         this.game = game;
         this.server = server;
-        timeoutHandler = new TimeoutHandler(playerSocket, server);
+        timeoutHandler = new TimeoutHandler(player.getPlayerSocket(), server);
     }
 
     public void run() {
@@ -128,20 +161,22 @@ class GameHandler extends Thread {
         do {
             try {
                 timeoutHandler.start();
-                server.sendMessage("Enter a number between 1 and 100: ", playerSocket);
-                String input = server.readMessage(playerSocket);
+                server.sendMessage("Enter a number between 1 and 100: ", player.getPlayerSocket());
+                String input = server.readMessage(player.getPlayerSocket());
                 selectedNumber = Integer.parseInt(input);
                 timeoutHandler.restartTime();
-                if (selectedNumber >= 1 && selectedNumber <= 100) {
+                if (selectedNumber >= 0 && selectedNumber <= 100) {
                     validInput = true;
                 } else {
-                    server.sendMessage("Invalid input. Please enter a number between 1 and 100.", playerSocket);
+                    server.sendMessage("Invalid input. Please enter a number between 0 and 100.", player.getPlayerSocket());
                 }
             } catch (NumberFormatException e) {
-                server.sendMessage("Invalid input. Please enter a valid integer.", playerSocket);
+                server.sendMessage("Invalid input. Please enter a valid integer.", player.getPlayerSocket());
             }
         } while (!validInput);
+        player.setNumberSelection(selectedNumber);
         game.getSelectedNumbers().add(selectedNumber);
+        timeoutHandler.interrupt();
     }
 }
 
