@@ -81,20 +81,26 @@ public class GameManager extends Thread {
     public void notifyRoundOutcome(List<Integer> selectedNumbers, List<Player> winners, List<Socket> playerSockets) {
         StringBuilder message = new StringBuilder();
         message.append("Round ").append(game.getRoundNumber()).append(" Outcome: \n");
-        message.append("Selected Numbers: ").append(selectedNumbers.toString()).append("\n");
-        message.append("╔════════════════════════════════════════════════════════╗\n");
+        message.append("╔═══════════════════════════════════════════════════════════════╗\n");
+        message.append("║                       Round Outcome ").append(game.getRoundNumber()).append(" \t\t\t║\n");
+        message.append("╠═══════════════════════════════════════════════════════════════╣\n");
+        message.append("║ Player Name       | Selected Number | Outcome | Points        ║\n");
+        message.append("╠═══════════════════════════════════════════════════════════════╣\n");
         for (Player player : game.getPlayers()) {
-            String outcome;
+            String outcome = "Lost";
             if (winners.contains(player)) {
-                outcome = "Winner";
-            } else {
-                outcome = "Loser";
+                outcome = "Won";
             }
-            message.append("║ Player: ").append(String.format("%-16s", player.getName()))
-                    .append(" Outcome: ").append(String.format("%-7s", outcome))
-                    .append(" Points: ").append(String.format("%-4d", player.getPoints())).append(" ║\n");
+            String playerName = String.format("%-18s", player.getName());
+            int selectedNumber = selectedNumbers.get(game.getPlayers().indexOf(player));
+            String selectedNumberFormatted = String.format("%-16d", selectedNumber);
+            String outcomeFormatted = String.format("%-7s", outcome);
+            int points = player.getPoints();
+            String pointsFormatted = String.format("%-7d", points);
+            message.append("║ ").append(playerName).append("| ").append(selectedNumberFormatted).append("| ")
+                    .append(outcomeFormatted).append(" | ").append(pointsFormatted).append("       ║ \n");
         }
-        message.append("╚════════════════════════════════════════════════════════╝\n");
+        message.append("╚═══════════════════════════════════════════════════════════════╝\n");
         broadcastMessage(message.toString(), playerSockets);
     }
 
