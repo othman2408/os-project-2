@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,34 +37,6 @@ public class Client {
                 if (fromUser.ready()) {
                     userInput = fromUser.readLine();
                     toServer.println(userInput);
-                    // Player joined a game
-                    if (userInput.equalsIgnoreCase("ready")) {
-                        while (!fromServer.readLine().equals("Game started!")) {
-                            System.out.println("Waiting for all players to ready up...");
-                            try {
-                                Thread.sleep(2000);
-                            } catch (Exception e) {
-                                System.out.println("Error: " + e);
-                            }
-                        }
-                        // Game started
-                        System.out.println("Game started");
-                        // List of players in game
-                        System.out.println(fromServer.readLine());
-                        do {
-                            System.out.println("Enter a number between 1 and 100: ");
-                            userInput = fromUser.readLine();
-                            toServer.println(userInput);
-                            // Round outcome
-                            String roundOutcome = fromServer.readLine();
-                            System.out.println(roundOutcome);
-                            // Check if game ended
-                            String isFinished = fromServer.readLine();
-                            if (isFinished.equals("end")) {
-                                break;
-                            }
-                        } while (true);
-                    }
                 }
             }
         } catch (IOException e) {

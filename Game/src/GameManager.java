@@ -1,4 +1,3 @@
-
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +117,22 @@ class GameHandler extends Thread {
     }
 
     public void run() {
-        int selectedNumber = Integer.parseInt(server.readMessage(playerSocket));
+        int selectedNumber = 0;
+        boolean validInput = false;
+        do {
+            try {
+                server.sendMessage("Enter a number between 1 and 100: ", playerSocket);
+                String input = server.readMessage(playerSocket);
+                selectedNumber = Integer.parseInt(input);
+                if (selectedNumber >= 1 && selectedNumber <= 100) {
+                    validInput = true;
+                } else {
+                    server.sendMessage("Invalid input. Please enter a number between 1 and 100.", playerSocket);
+                }
+            } catch (NumberFormatException e) {
+                server.sendMessage("Invalid input. Please enter a valid integer.", playerSocket);
+            }
+        } while (!validInput);
         game.getSelectedNumbers().add(selectedNumber);
     }
 }
