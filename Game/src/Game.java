@@ -289,7 +289,7 @@ public class Game implements Serializable {
         StringBuilder playersList = new StringBuilder();
         
         playersList.append("╔════════════════════════╗\n");
-        playersList.append("║      Game Players       ║\n");
+        playersList.append("║      Game Players      ║\n");
         playersList.append("╠════════════════════════╣\n");
     
         for (Player player : players) {
@@ -297,7 +297,7 @@ public class Game implements Serializable {
             for (int i = player.getName().length(); i < 21; i++) {
                 playersList.append(" ");
             }
-            playersList.append("║\n");
+            playersList.append("  ║\n");
         }
         
         playersList.append("╚════════════════════════╝\n");

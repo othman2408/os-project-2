@@ -82,7 +82,7 @@ public class Server {
             username = readMessage(playerSocket);
         } catch (Exception e) {
             System.out.println("Error: " + e);
-        } 
+        }
         String ticket = getTicket(username, playerSocket);
         sendMessage("Your ticket is: " + ticket, playerSocket);
         return ticket;
@@ -93,7 +93,8 @@ public class Server {
         if (ticketList.containsKey(username)) {
             return ticketList.get(username);
         } else {
-            // generate a new ticket, add the player to the players list and return the ticket
+            // generate a new ticket, add the player to the players list and return the
+            // ticket
             Ticket ticket = new Ticket(username);
             ticketList.put(username, ticket.toString());
             Player player = new Player(username, ticket);
@@ -104,20 +105,31 @@ public class Server {
     }
 
     // This method sends the available games to players
+    // Send the available games to players
     public void getAvailableGames(Socket playerSocket) {
         try {
             // Send the available games to the player
             System.out.println(
                     "Sending available games to " + playerSocket.getInetAddress() + ":" + playerSocket.getPort());
-            String message = "Available games: ";
+            StringBuilder message = new StringBuilder();
+            message.append("╔══════════════════════════════════════╗\n");
+            message.append("║             Available games:         ║\n");
+            message.append("╠══════════════════════════════════════╣\n");
+
+            // Create a default lobby if no games are available
             if (games.isEmpty()) {
                 Game game = new Game("Default lobby");
                 games.add(game);
             }
+
+            // Loop over the games list and build the message
             for (Game game : games) {
-                message = message + game.getName() + " ";
+                message.append(String.format("║ %-36s ║\n", game.getName()));
             }
-            sendMessage(message, playerSocket);
+
+            message.append("╚══════════════════════════════════════╝\n");
+
+            sendMessage(message.toString(), playerSocket);
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
@@ -135,7 +147,7 @@ public class Server {
         for (Map.Entry<String, String> entry : ticketList.entrySet()) {
             String username = entry.getKey();
             String ticket = entry.getValue();
-            msg.append(String.format("║ %-17s %-11s   ║\n", username, ticket));
+            msg.append(String.format("║ %-17s %-11s  ║\n", username, ticket));
         }
 
         msg.append("╚══════════════════════════════════════╝\n");
@@ -301,7 +313,7 @@ public class Server {
             }
         }
     }
-    
+
     // This method removes a player from the list of connected players
     public void removePlayer(Socket playerSocket) {
         String usernameToRemove = null;
@@ -314,7 +326,7 @@ public class Server {
                 break;
             }
         }
-        
+
         if (usernameToRemove != null) {
             ticketList.remove(usernameToRemove);
             System.out.println("Player " + usernameToRemove + " has been removed from the ticket list.");
@@ -330,7 +342,6 @@ public class Server {
         }
         return null;
     }
-
 
     // =============================================================================
     // ===============================| I/O Methods |===============================
