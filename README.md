@@ -15,9 +15,9 @@ This project is a socket-based multiplayer game where players try to select a nu
 
 ## How to Run
 
-1. Compile the Java files using the following command:
-2. Start the server by running the Server class:
-3. Start the client(s) by running the Client class in separate terminals:
+1. Compile the Java files using the following command: `javac *.java`
+2. Start the server by running the Server class: `java Server`
+3. Start the client(s) by running the Client class in separate terminals: `java Client`
 4. Follow the instructions in the client terminal to join the game.
 
 ## Classes
