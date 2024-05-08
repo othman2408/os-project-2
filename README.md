@@ -1,45 +1,63 @@
-# Guess 2/3 Game
+# 2/3 Game
 
-This project can be used as a starting point to create your own Vaadin application with Spring Boot.
-It contains all the necessary configuration and some placeholder files to get you started.
+This project is a socket-based multiplayer game where players try to select a number closest to two-thirds of the average of all players' choices in each round. The game follows a set of rules, and the last remaining player wins the game.
 
-## Running the application
+## Game Rules
 
-The project is a standard Maven project. To run it from the command line,
-type `mvnw` (Windows), or `./mvnw` (Mac & Linux), then open
-http://localhost:8080 in your browser.
+1. Each player starts with 5 points.
+2. In each round, every player selects an integer between 0 and 100 (inclusive) within a given time frame and shares it with the game server.
+3. The winner(s) of a round is the player(s) whose selection is closest to two-thirds of the average of all numbers chosen by all players for that round.
+4. Players lose 1 point for each losing round.
+5. A player is eliminated from the game when they run out of points.
+6. After each round, the following information is announced to all players: the round number, the players in the game, the numbers chosen, the remaining points for each player, the outcome (winner or loser) of that round, and which players have been eliminated, if any.
+7. The game is won by the last remaining player.
+8. In the last round, when there are two players left in the game, and one chooses 0, the other player will win the game (if their guess > 0).
 
-You can also import the project to your IDE of choice as you would with any
-Maven project. Read more on [how to import Vaadin projects to different IDEs](https://vaadin.com/docs/latest/guide/step-by-step/importing) (Eclipse, IntelliJ IDEA, NetBeans, and VS Code).
+## How to Run
 
-## Deploying to Production
+1. Compile the Java files using the following command:
+2. Start the server by running the Server class:
+3. Start the client(s) by running the Client class in separate terminals:
+4. Follow the instructions in the client terminal to join the game.
 
-To create a production build, call `mvnw clean package -Pproduction` (Windows),
-or `./mvnw clean package -Pproduction` (Mac & Linux).
-This will build a JAR file with all the dependencies and front-end resources,
-ready to be deployed. The file can be found in the `target` folder after the build completes.
+## Classes
 
-Once the JAR file is built, you can run it using
-`java -jar target/guessgame-1.0-SNAPSHOT.jar`
+### Server
 
-## Project structure
+The Server class is responsible for managing the game server. It handles client connections, distributes tickets, manages games and players, and updates the leaderboard.
 
-- `MainLayout.java` in `src/main/java` contains the navigation setup (i.e., the
-  side/top bar and the main menu). This setup uses
-  [App Layout](https://vaadin.com/docs/components/app-layout).
-- `views` package in `src/main/java` contains the server-side Java views of your application.
-- `views` folder in `frontend/` contains the client-side JavaScript views of your application.
-- `themes` folder in `frontend/` contains the custom CSS styles.
+### Player
 
-## Useful links
+The Player class represents a player in the game. It stores the player's name, points, number selection, and other relevant information.
 
-- Read the documentation at [vaadin.com/docs](https://vaadin.com/docs).
-- Follow the tutorial at [vaadin.com/docs/latest/tutorial/overview](https://vaadin.com/docs/latest/tutorial/overview).
-- Create new projects at [start.vaadin.com](https://start.vaadin.com/).
-- Search UI components and their usage examples at [vaadin.com/docs/latest/components](https://vaadin.com/docs/latest/components).
-- View use case applications that demonstrate Vaadin capabilities at [vaadin.com/examples-and-demos](https://vaadin.com/examples-and-demos).
-- Build any UI without custom CSS by discovering Vaadin's set of [CSS utility classes](https://vaadin.com/docs/styling/lumo/utility-classes). 
-- Find a collection of solutions to common use cases at [cookbook.vaadin.com](https://cookbook.vaadin.com/).
-- Find add-ons at [vaadin.com/directory](https://vaadin.com/directory).
-- Ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/vaadin) or join our [Discord channel](https://discord.gg/MYFq5RTbBn).
-- Report issues, create pull requests in [GitHub](https://github.com/vaadin).
+### Game
+
+The Game class manages the game logic, including adding/removing players, determining round winners, deducting points, and eliminating players.
+
+### GameManager
+
+The GameManager class handles the execution of a game. It broadcasts messages to players, determines round outcomes, and manages the game flow.
+
+### ClientHandler
+
+The ClientHandler class is a thread responsible for handling client connections and managing client-server communication.
+
+### GameHandler
+
+The GameHandler class is a thread that handles player input for each round, ensuring that players submit their number selections within the given time frame.
+
+### TimeoutHandler
+
+The TimeoutHandler class is a thread that manages the timeout for player input during each round. If a player fails to submit their number selection within the time limit, their connection is closed.
+
+### Client
+
+The Client class represents the client application that connects to the server and allows players to interact with the game.
+
+### Ticket
+
+The Ticket class generates and manages unique tickets for players to join the game.
+
+## Documentation
+
+The code is well-documented with comments explaining the purpose and functionality of each class and method. Additionally, the project follows best practices for object-oriented programming and uses synchronization techniques to ensure thread safety.
