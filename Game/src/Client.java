@@ -7,7 +7,7 @@ import java.net.Socket;
 public class Client {
 
     public static void main(String[] args) {
-        final String SERVER_ADDRESS = "localhost";
+        final String SERVER_ADDRESS = "localhost"; 
         final int PORT = 19400;
         Socket client = null;
         PrintWriter toServer = null;

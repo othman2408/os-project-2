@@ -287,10 +287,21 @@ public class Game implements Serializable {
     // Method to get the list of players in the game
     public String getGamePlayers() {
         StringBuilder playersList = new StringBuilder();
+        
+        playersList.append("╔════════════════════════╗\n");
+        playersList.append("║      Game Players       ║\n");
+        playersList.append("╠════════════════════════╣\n");
+    
         for (Player player : players) {
-            playersList.append(player.getName()).append(", ");
+            playersList.append("║ ").append(player.getName());
+            for (int i = player.getName().length(); i < 21; i++) {
+                playersList.append(" ");
+            }
+            playersList.append("║\n");
         }
+        
+        playersList.append("╚════════════════════════╝\n");
+        
         return playersList.toString();
-    }
-
+    }    
 }

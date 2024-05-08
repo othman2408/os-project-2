@@ -83,13 +83,13 @@ public class Server {
         } catch (Exception e) {
             System.out.println("Error: " + e);
         } 
-        String ticket = getTicket(username);
+        String ticket = getTicket(username, playerSocket);
         sendMessage("Your ticket is: " + ticket, playerSocket);
         return ticket;
     }
 
     // This method returns a ticket for a given username
-    public String getTicket(String username) {
+    public String getTicket(String username, Socket playerSocket) {
         if (ticketList.containsKey(username)) {
             return ticketList.get(username);
         } else {
@@ -97,6 +97,7 @@ public class Server {
             Ticket ticket = new Ticket(username);
             ticketList.put(username, ticket.toString());
             Player player = new Player(username, ticket);
+            player.setPlayerSocket(playerSocket);
             players.add(player);
             return ticket.toString();
         }
@@ -265,14 +266,15 @@ public class Server {
         // Wait for the game to finish
         try {
             gameManager.get(game).join();
-            gameManager.remove(game);
-            games.remove(game);
         } catch (InterruptedException e) {
             System.out.println("Error: " + e);
         } finally {
             // Reset the player's ready status and remove the player from the game
             player.resetPlayer();
             playerMap.remove(player);
+            gameManager.remove(game);
+            games.remove(game);
+
         }
     }
 
@@ -299,6 +301,36 @@ public class Server {
             }
         }
     }
+    
+    // This method removes a player from the list of connected players
+    public void removePlayer(Socket playerSocket) {
+        String usernameToRemove = null;
+        for (Map.Entry<String, String> entry : ticketList.entrySet()) {
+            String username = entry.getKey();
+            String ticket = entry.getValue();
+            Player player = getPlayerByName(username);
+            if (player != null && player.getPlayerSocket().equals(playerSocket)) {
+                usernameToRemove = username;
+                break;
+            }
+        }
+        
+        if (usernameToRemove != null) {
+            ticketList.remove(usernameToRemove);
+            System.out.println("Player " + usernameToRemove + " has been removed from the ticket list.");
+        }
+    }
+
+    // This method retrieves a player by username
+    private Player getPlayerByName(String username) {
+        for (Player player : players) {
+            if (player.getName().equals(username)) {
+                return player;
+            }
+        }
+        return null;
+    }
+
 
     // =============================================================================
     // ===============================| I/O Methods |===============================
@@ -399,6 +431,9 @@ class ClientHandler extends Thread {
                         break;
                     case "6":
                         server.sendMessage("Goodbye!", playerSocket);
+                        server.removePlayer(playerSocket);
+                        // End connection
+                        playerSocket.close();
                         break;
                     default:
                         server.sendMessage("Invalid choice. Please try again.", playerSocket);

@@ -22,12 +22,13 @@ public class GameManager extends Thread {
         // Send the list of players in the game to all players
         System.out.println("Game: " + game.getName());
         broadcastMessage("Game started!", playersSockets);
-        broadcastMessage(game.getPlayers().toString(), playersSockets);
+        broadcastMessage(game.getGamePlayers(), playersSockets);
         List<GameHandler> gameHandlers = new ArrayList<>();
         while (true) {
             try {
                 for (Player player : game.getPlayers()) {
                     GameHandler handler = new GameHandler(player, game, server);
+                    Thread.currentThread().setName(player.getName());
                     gameHandlers.add(handler);
                 }
 
@@ -48,7 +49,7 @@ public class GameManager extends Thread {
                     break;
                 }
                 System.out.println("Selected Numbers: " + selectedNumbers.toString());
-                // Check if one player chooses 0 and the other player chooses a number > 0
+                // Check if there are only two players left and it is the last round
                 if (game.getPlayers().size() == 2 && game.isLastRound()) {
                     Player player1 = game.getPlayers().get(0);
                     Player player2 = game.getPlayers().get(1);
@@ -136,7 +137,6 @@ public class GameManager extends Thread {
         message.append("╚═══════════════════════════════════════════════════════════════╝\n");
         broadcastMessage(message.toString(), playerSockets);
     }
-
 }
 
 // =========================================================================
@@ -158,10 +158,10 @@ class GameHandler extends Thread {
     public void run() {
         int selectedNumber = 0;
         boolean validInput = false;
+        timeoutHandler.start();
+        server.sendMessage("Enter a number between 0 and 100: ", player.getPlayerSocket());
         do {
             try {
-                timeoutHandler.start();
-                server.sendMessage("Enter a number between 1 and 100: ", player.getPlayerSocket());
                 String input = server.readMessage(player.getPlayerSocket());
                 selectedNumber = Integer.parseInt(input);
                 timeoutHandler.restartTime();
@@ -174,6 +174,7 @@ class GameHandler extends Thread {
                 server.sendMessage("Invalid input. Please enter a valid integer.", player.getPlayerSocket());
             }
         } while (!validInput);
+        System.out.println(Thread.currentThread().getName() + "thread selected a number and exited the loop...");
         player.setNumberSelection(selectedNumber);
         game.getSelectedNumbers().add(selectedNumber);
         timeoutHandler.interrupt();
@@ -200,6 +201,8 @@ class TimeoutHandler extends Thread {
                 Thread.sleep(3000);
             } while (System.currentTimeMillis() < endTime);
             server.sendMessage("Time's up! You did not enter a number, connection closed.", playerSocket);
+            server.removePlayer(playerSocket);
+            // End connection
             playerSocket.close();
         } catch (InterruptedException | IOException e) {
             System.out.println("Error: " + e);
