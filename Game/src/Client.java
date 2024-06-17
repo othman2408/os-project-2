@@ -14,10 +14,10 @@ public class Client {
             return;
         }
 
-        // final String SERVER_ADDRESS = args[0];
-        final String SERVER_ADDRESS = "localhost";
-        // final int PORT = Integer.parseInt(args[1]);
-        final int PORT = 19400;
+        final String SERVER_ADDRESS = args[0];
+        //final String SERVER_ADDRESS = "localhost";
+        final int PORT = Integer.parseInt(args[1]);
+        //final int PORT = 19400;
         Socket client = null;
         PrintWriter toServer = null;
         BufferedReader fromServer = null;
