@@ -39,7 +39,9 @@ This project is a socket-based multiplayer game where players aim to select a nu
 4. Follow the instructions in the client terminal to join the game.
 
 
-> **NOTE:** You can run the code on a server or an online VM and join the game using its IP address. Ensure that the necessary ports are open for inbound/outbound traffic.
+>⚠️ **NOTE:** You can run the code on a server or an online VM and join the game using its IP address. Ensure that the necessary ports are open for inbound/outbound traffic.
+
+>⚠️ **NOTE:** The GUI is not fully implemented. Please use the terminal to access and play the game.
 
 ## Classes
 
