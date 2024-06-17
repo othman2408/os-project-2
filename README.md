@@ -1,63 +1,75 @@
+# OS - CMPS405 Project 2
 # 2/3 Game
 
-This project is a socket-based multiplayer game where players try to select a number closest to two-thirds of the average of all players' choices in each round. The game follows a set of rules, and the last remaining player wins the game.
+This project is a socket-based multiplayer game where players aim to select a number closest to two-thirds of the average of all players' choices in each round. The last remaining player wins the game.
 
 ## Game Rules
 
-1. Each player starts with 5 points.
-2. In each round, every player selects an integer between 0 and 100 (inclusive) within a given time frame and shares it with the game server.
-3. The winner(s) of a round is the player(s) whose selection is closest to two-thirds of the average of all numbers chosen by all players for that round.
-4. Players lose 1 point for each losing round.
-5. A player is eliminated from the game when they run out of points.
-6. After each round, the following information is announced to all players: the round number, the players in the game, the numbers chosen, the remaining points for each player, the outcome (winner or loser) of that round, and which players have been eliminated, if any.
-7. The game is won by the last remaining player.
-8. In the last round, when there are two players left in the game, and one chooses 0, the other player will win the game (if their guess > 0).
+1. Each player starts with **5 points**.
+2. In each round:
+   - Players choose an integer between **0 and 100**.
+   - Choices are submitted to the game server within a given time frame.
+3. The winner(s) of the round is the player(s) whose choice is closest to **two-thirds of the average** of all submitted numbers.
+4. Players **lose 1 point** for each losing round.
+5. A player is **eliminated** when they run out of points.
+6. After each round, the following is announced:
+   - **Round number**
+   - **Players** still in the game
+   - **Numbers chosen**
+   - **Remaining points** for each player
+   - **Round outcome** (winners/losers)
+   - **Eliminated players**, if any
+7. The game is won by the **last remaining player**.
+8. **Special Rule**: In the final round with two players, if one chooses **0**, the other player wins if their guess is **greater than 0**.
 
 ## How to Run
 
-1. Compile the Java files using the following command: `javac *.java`
-2. Start the server by running the Server class: `java Server`
-3. Start the client(s) by running the Client class in separate terminals: `java Client`
+1. Compile the Java files:
+   ```sh
+   javac *.java
+   ```
+2. Start the server:
+   ```sh
+   java Server
+   ```
+3. Start the client(s) in separate terminals:
+   ```sh
+   java Client <Server IP Address> <Provide Port Here>
+   ```
 4. Follow the instructions in the client terminal to join the game.
+
+
+> **NOTE:** You can run the code on a server or an online VM and join the game using its IP address. Ensure that the necessary ports are open for inbound/outbound traffic.
 
 ## Classes
 
 ### Server
-
-The Server class is responsible for managing the game server. It handles client connections, distributes tickets, manages games and players, and updates the leaderboard.
-
+- Manages the game server, handles client connections, manages games and players, and updates the leaderboard.
+  
 ### Player
-
-The Player class represents a player in the game. It stores the player's name, points, number selection, and other relevant information.
+- Represents a player, storing the player's name, points, and number selection.
 
 ### Game
-
-The Game class manages the game logic, including adding/removing players, determining round winners, deducting points, and eliminating players.
+- Manages game logic: adding/removing players, determining winners, deducting points, and eliminating players.
 
 ### GameManager
-
-The GameManager class handles the execution of a game. It broadcasts messages to players, determines round outcomes, and manages the game flow.
+- Executes the game, broadcasts messages, determines outcomes, and manages game flow.
 
 ### ClientHandler
-
-The ClientHandler class is a thread responsible for handling client connections and managing client-server communication.
+- Handles client connections and client-server communication.
 
 ### GameHandler
-
-The GameHandler class is a thread that handles player input for each round, ensuring that players submit their number selections within the given time frame.
+- Manages player input for each round, ensuring a timely number of submissions.
 
 ### TimeoutHandler
-
-The TimeoutHandler class is a thread that manages the timeout for player input during each round. If a player fails to submit their number selection within the time limit, their connection is closed.
+- Manages the timeout for player input during each round, closing connections for players who fail to submit in time.
 
 ### Client
-
-The Client class represents the client application that connects to the server and allows players to interact with the game.
+- The client application that connects to the server, allowing players to interact with the game.
 
 ### Ticket
-
-The Ticket class generates and manages unique tickets for players to join the game.
+- Generates and manages unique tickets for players to join the game.
 
 ## Documentation
 
-The code is well-documented with comments explaining the purpose and functionality of each class and method. Additionally, the project follows best practices for object-oriented programming and uses synchronization techniques to ensure thread safety.
+The code includes thorough comments detailing the purpose and functionality of each class and method. It adheres to best practices in object-oriented programming and employs synchronization techniques to ensure thread safety.
