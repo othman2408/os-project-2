@@ -1,4 +1,4 @@
-# OS - CMPS405 Project 2
+# OS - CMPS 405 - Project 2
 # 2/3 Game
 
 This project is a socket-based multiplayer game where players aim to select a number closest to two-thirds of the average of all players' choices in each round. The last remaining player wins the game.
